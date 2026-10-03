@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+:root {
+  --ivory: #fffaf2;
+  --cream: #f7efe3;
+  --sage: #75856f;
+  --sage-soft: #dce5d5;
+  --blush: #d9a8a7;
+  --beige: #e8dccb;
+  --ink: #443c35;
+  --muted: #746b62;
+}
+
+@theme {
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-heading);
+  --font-script: var(--font-script);
+  --color-ivory: var(--ivory);
+  --color-cream: var(--cream);
+  --color-sage: var(--sage);
+  --color-blush: var(--blush);
+  --color-beige: var(--beige);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--ivory);
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(217, 168, 167, 0.12), transparent 32rem),
+    linear-gradient(180deg, var(--ivory), #fffdf8 45%, var(--cream));
+  color: var(--ink);
+  font-family: var(--font-body), var(--font-myanmar), system-ui, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  outline-color: var(--sage);
+  outline-offset: 3px;
+}
+
+.font-myanmar {
+  font-family: var(--font-myanmar), var(--font-body), sans-serif;
+  line-height: 2;
+}
+
+.script {
+  font-family: var(--font-script), cursive;
+}
+
+.section-shell {
+  width: min(1120px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 5.25rem 0;
+}
+
+.eyebrow {
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--sage);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.floral-corner::before,
+.floral-corner::after {
+  content: "";
+  position: absolute;
+  width: 86px;
+  height: 86px;
+  opacity: 0.42;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(217, 168, 167, 0.35) 0 18%, transparent 19%),
+    radial-gradient(circle at 65% 35%, rgba(117, 133, 111, 0.24) 0 17%, transparent 18%),
+    radial-gradient(circle at 45% 68%, rgba(217, 168, 167, 0.22) 0 14%, transparent 15%);
+  border: 1px solid rgba(117, 133, 111, 0.12);
+  border-radius: 999px;
+}
+
+.floral-corner::before {
+  top: 1rem;
+  left: 1rem;
+}
+
+.floral-corner::after {
+  right: 1rem;
+  bottom: 1rem;
+  transform: rotate(180deg);
+}
+
+.admin-input {
+  width: 100%;
+  border: 1px solid rgba(117, 133, 111, 0.22);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.76);
+  padding: 0.75rem 0.9rem;
+  color: var(--ink);
+}
+
+.admin-label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.admin-panel {
+  border: 1px solid rgba(117, 133, 111, 0.18);
+  border-radius: 1rem;
+  background: rgba(255, 253, 248, 0.82);
+  box-shadow: 0 18px 60px rgba(68, 60, 53, 0.06);
+}
+
+@media (max-width: 640px) {
+  .section-shell {
+    width: min(100vw - 28px, 430px);
+    padding: 4rem 0;
+  }
+}
+
+/* Gentle interactions throughout the invitation. */
+.wedding-experience button,
+.wedding-experience a {
+  transition: background-color 250ms ease, color 250ms ease, box-shadow 350ms ease;
+}
+
+.wedding-experience button:active {
+  scale: 0.98;
+}
+
+.portrait-photo {
+  transition: transform 1200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .portrait-photo:hover {
+    transform: scale(1.035);
+  }
+  .wedding-experience button:hover {
+    box-shadow: 0 8px 24px rgba(68, 60, 53, 0.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .wedding-experience *,
+  .wedding-experience *::before,
+  .wedding-experience *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .wedding-experience button:active { scale: none; }
+  .portrait-photo:hover { transform: none; }
+}

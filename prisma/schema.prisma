@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+}
+
+enum RSVPStatus {
+  ACCEPTED
+  DECLINED
+  PENDING
+}
+
+enum MediaType {
+  HERO
+  GROOM
+  BRIDE
+  GALLERY
+  MUSIC
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ADMIN)
+  createdAt    DateTime @default(now())
+}
+
+model Guest {
+  id                   String   @id @default(cuid())
+  fullName             String
+  displayName          String?
+  inviteSlug           String   @unique
+  personalizedGreeting String?
+  email                String?
+  phone                String?
+  status               RSVPStatus @default(PENDING)
+  notes                String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  rsvp                 RSVP?
+
+  @@index([fullName])
+  @@index([status])
+}
+
+model RSVP {
+  id               String     @id @default(cuid())
+  guestId          String     @unique
+  guest            Guest      @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  attendanceStatus RSVPStatus @default(PENDING)
+  guestCount       Int        @default(1)
+  message          String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([attendanceStatus])
+}
+
+model WeddingSettings {
+  id           String   @id @default(cuid())
+  groomName    String
+  brideName    String
+  weddingDate  DateTime
+  startTime    String
+  endTime      String
+  rsvpDeadline DateTime?
+  venueName    String
+  venueAddress String
+  mapsUrl      String?
+  latitude     Float?
+  longitude    Float?
+  musicTitle   String
+  musicEnabled Boolean  @default(true)
+  musicVolume  Float    @default(0.55)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model InvitationContent {
+  id                  String   @id @default(cuid())
+  landingHeading      String
+  greetingTemplate    String
+  englishIntro        String
+  myanmarIntro        String
+  footerMessage       String
+  thankYouText        String
+  coupleHeading       String   @default("Together With Their Families")
+  eventHeading        String   @default("Event Details")
+  venueHeading        String   @default("Venue")
+  galleryHeading      String   @default("Gallery")
+  rsvpHeading         String   @default("RSVP")
+  saveDateHeading     String   @default("Save The Date")
+  dressCodeHeading    String   @default("Dress Code")
+  dressCodeSubtitle   String   @default("Smart Casual / Elegant Attire")
+  dressCodeWarning    String   @default("Please avoid wearing white.")
+  groomParents        String?
+  brideParents        String?
+  groomDescription    String?
+  brideDescription    String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model DressCodeColor {
+  id        String   @id @default(cuid())
+  name      String
+  hex       String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MediaAsset {
+  id        String    @id @default(cuid())
+  type      MediaType
+  url       String
+  alt       String?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([type, sortOrder])
+}
+
+model SectionSetting {
+  id         String   @id @default(cuid())
+  sectionKey String   @unique
+  enabled    Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ThemeSetting {
+  id               String   @id @default(cuid())
+  primaryColor     String
+  secondaryColor   String
+  backgroundColor  String
+  headingFont      String
+  bodyFont         String
+  scriptFont       String
+  floralEnabled    Boolean  @default(true)
+  preset           String   @default("Elegant Sage")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
