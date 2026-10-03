@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -150,4 +151,16 @@ model ThemeSetting {
   preset           String   @default("Elegant Sage")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+// Tracks authorized uploads so callback retries and browser finalization are idempotent.
+model MediaUpload {
+  id          String    @id
+  pathname    String    @unique
+  type        MediaType
+  alt         String?
+  sortOrder   Int       @default(0)
+  replaceId   String?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
 }

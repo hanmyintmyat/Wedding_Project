@@ -31,11 +31,11 @@ export function buildMonthCalendar(dateValue: string) {
 }
 
 function parseTime(date: string, time: string) {
-  const match = time.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
+  const match = time.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
   if (!match) return `${date.replaceAll("-", "")}T000000`;
   let hour = Number(match[1]);
   const minute = Number(match[2] || "00");
-  const meridiem = match[3].toUpperCase();
+  const meridiem = match[3]?.toUpperCase();
   if (meridiem === "PM" && hour !== 12) hour += 12;
   if (meridiem === "AM" && hour === 12) hour = 0;
   return `${date.replaceAll("-", "")}T${String(hour).padStart(2, "0")}${String(minute).padStart(2, "0")}00`;
@@ -44,7 +44,14 @@ function parseTime(date: string, time: string) {
 export function googleCalendarLink(data: WeddingData) {
   const title = `${data.settings.groomName} & ${data.settings.brideName} Wedding`;
   const date = data.settings.weddingDate.slice(0, 10);
-  const dates = `${parseTime(date, data.settings.startTime)}/${parseTime(date, data.settings.endTime)}`;
+  const start = parseTime(date, data.settings.startTime);
+  let end = parseTime(date, data.settings.endTime);
+  if (end <= start) {
+    const nextDay = new Date(`${date}T00:00:00Z`);
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+    end = parseTime(nextDay.toISOString().slice(0, 10), data.settings.endTime);
+  }
+  const dates = `${start}/${end}`;
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: title,

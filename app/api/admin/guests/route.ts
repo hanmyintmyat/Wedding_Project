@@ -1,15 +1,17 @@
-import { RSVPStatus } from "@prisma/client";
+import { apiError } from "@/lib/api-errors";
+import { RSVPStatus } from "@/generated/prisma/client";
 import { requireAdmin } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getPrismaClient } from "@/lib/db";
 import { guestSchema } from "@/lib/validations";
 import { slugifyName } from "@/lib/invitation-utils";
 
 export async function GET(request: Request) {
-  await requireAdmin();
+  try {
+  await requireAdmin(request);
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") || "";
   const status = searchParams.get("status");
-  const guests = await prisma.guest.findMany({
+  const guests = await getPrismaClient().guest.findMany({
     where: {
       AND: [
         q ? { fullName: { contains: q, mode: "insensitive" } } : {},
@@ -20,12 +22,15 @@ export async function GET(request: Request) {
     orderBy: { createdAt: "desc" }
   });
   return Response.json(guests);
+
+  } catch (error) { return apiError(error); }
 }
 
 export async function POST(request: Request) {
-  await requireAdmin();
+  try {
+  await requireAdmin(request);
   const data = guestSchema.parse(await request.json());
-  const guest = await prisma.guest.create({
+  const guest = await getPrismaClient().guest.create({
     data: {
       ...data,
       status: data.status as RSVPStatus,
@@ -38,4 +43,6 @@ export async function POST(request: Request) {
     }
   });
   return Response.json(guest, { status: 201 });
+
+  } catch (error) { return apiError(error); }
 }

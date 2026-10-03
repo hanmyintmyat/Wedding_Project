@@ -1,5 +1,6 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin-fetch";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -20,12 +21,11 @@ export default function EventSettingsForm({ settings }: { settings: EventPayload
     setMessage("");
     setError("");
     try {
-      const response = await fetch("/api/admin/settings?type=event", {
+      await adminFetch("/api/admin/settings?type=event", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values)
       });
-      if (!response.ok) throw new Error("Could not save event details. Please try again.");
       form.reset(values);
       setMessage("Event details saved successfully.");
       router.refresh();

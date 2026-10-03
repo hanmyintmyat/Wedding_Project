@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { adminFetch } from "@/lib/admin-fetch";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
@@ -8,15 +10,18 @@ import { contentSchema } from "@/lib/validations";
 type ContentPayload = z.infer<typeof contentSchema>;
 
 export default function ContentEditor({ content }: { content: ContentPayload }) {
+  const [message, setMessage] = useState("");
   const form = useForm<ContentPayload>({ resolver: zodResolver(contentSchema), defaultValues: content });
   const myanmar = useWatch({ control: form.control, name: "myanmarIntro" });
 
   async function save(values: ContentPayload) {
-    await fetch("/api/admin/settings?type=content", {
+    setMessage("");
+    try { await adminFetch("/api/admin/settings?type=content", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values)
-    });
+    }); setMessage("Changes saved. The public invitation is updated."); }
+    catch (error) { setMessage(error instanceof Error ? error.message : "Could not save changes."); }
   }
 
   return (
@@ -45,8 +50,9 @@ export default function ContentEditor({ content }: { content: ContentPayload }) 
         <label className="admin-label">Dress Code Warning<input className="admin-input" {...form.register("dressCodeWarning")} /></label>
         <label className="admin-label">Thank-you Text<input className="admin-input" {...form.register("thankYouText")} /></label>
         <label className="admin-label">Footer Message<textarea className="admin-input" rows={3} {...form.register("footerMessage")} /></label>
+        <p role="status" className="text-sm text-muted">{message}</p>
         <div className="flex gap-2">
-          <button className="rounded-full bg-sage px-5 py-2 text-sm font-bold text-white">Save Changes</button>
+          <button disabled={form.formState.isSubmitting} className="rounded-full bg-sage px-5 py-2 text-sm font-bold text-white">Save Changes</button>
           <button type="reset" className="rounded-full border border-sage/20 px-5 py-2 text-sm font-bold text-sage">Discard Changes</button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Great_Vibes, Noto_Sans, Noto_Sans_Myanmar, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { getSiteUrl } from "@/lib/site-url";
 
 const body = Noto_Sans({
   subsets: ["latin"],
@@ -30,7 +31,7 @@ const myanmar = Noto_Sans_Myanmar({
 export const metadata: Metadata = {
   title: "Myo Thwin Kyaw & Khaing Su Wai Wedding",
   description: "A romantic wedding invitation for 10 January 2027.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000")
+  metadataBase: getSiteUrl() ? new URL(getSiteUrl()) : undefined
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { adminFetch } from "@/lib/admin-fetch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
@@ -16,14 +18,17 @@ const presets: Record<ThemePayload["preset"], Pick<ThemePayload, "primaryColor" 
 };
 
 export default function ThemeSettings({ theme }: { theme: ThemePayload }) {
+  const [message, setMessage] = useState("");
   const form = useForm<ThemeInput, undefined, ThemePayload>({ resolver: zodResolver(themeSchema), defaultValues: theme });
 
   async function save(values: ThemePayload) {
-    await fetch("/api/admin/settings?type=theme", {
+    setMessage("");
+    try { await adminFetch("/api/admin/settings?type=theme", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values)
-    });
+    }); setMessage("Changes saved. The public invitation is updated."); }
+    catch (error) { setMessage(error instanceof Error ? error.message : "Could not save changes."); }
   }
 
   function applyPreset(preset: ThemePayload["preset"]) {
@@ -48,7 +53,8 @@ export default function ThemeSettings({ theme }: { theme: ThemePayload }) {
         <label className="admin-label">Script Font<select className="admin-input" {...form.register("scriptFont")}><option>Great Vibes</option><option>Parisienne</option><option>Allura</option></select></label>
       </div>
       <label className="inline-flex items-center gap-3 text-sm font-bold text-sage"><input type="checkbox" className="h-5 w-5 accent-sage" {...form.register("floralEnabled")} /> Floral decorations enabled</label>
-      <button className="w-fit rounded-full bg-sage px-5 py-2 text-sm font-bold text-white">Save Changes</button>
+      <p role="status" className="text-sm text-muted">{message}</p>
+      <button disabled={form.formState.isSubmitting} className="w-fit rounded-full bg-sage px-5 py-2 text-sm font-bold text-white">Save Changes</button>
     </form>
   );
 }

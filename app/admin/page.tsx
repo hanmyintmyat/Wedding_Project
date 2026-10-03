@@ -3,14 +3,14 @@ import DashboardStats from "@/components/admin/DashboardStats";
 import PreviewPanel from "@/components/admin/PreviewPanel";
 import { getAdminSession } from "@/lib/auth";
 import { getDatabaseHealth } from "@/lib/database";
-import { prisma } from "@/lib/db";
+import { getPrismaClient } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 export default async function AdminDashboard() {
   if (!(await getAdminSession())) redirect("/admin/login");
   const health = await getDatabaseHealth();
   const fallback = { TotalGuests: 0, Invited: 0, Accepted: 0, Pending: 0, Declined: 0, TotalRSVPGuests: 0 };
-  const stats = await prisma.guest
+  const stats = health.connected ? await getPrismaClient().guest
     .findMany({ include: { rsvp: true } })
     .then((guests) => ({
       TotalGuests: guests.length,
@@ -18,11 +18,11 @@ export default async function AdminDashboard() {
       Accepted: guests.filter((guest) => guest.status === "ACCEPTED").length,
       Pending: guests.filter((guest) => guest.status === "PENDING").length,
       Declined: guests.filter((guest) => guest.status === "DECLINED").length,
-      TotalRSVPGuests: guests.reduce((sum, guest) => sum + (guest.rsvp?.guestCount || 0), 0)
+      TotalRSVPGuests: guests.reduce((sum, guest) => sum + (guest.rsvp?.attendanceStatus === "ACCEPTED" ? guest.rsvp.guestCount : 0), 0)
     }))
-    .catch(() => fallback);
+    .catch(() => fallback) : fallback;
 
-  const recent = await prisma.rSVP.findMany({ include: { guest: true }, orderBy: { updatedAt: "desc" }, take: 5 }).catch(() => []);
+  const recent = health.connected ? await getPrismaClient().rSVP.findMany({ include: { guest: true }, orderBy: { updatedAt: "desc" }, take: 5 }).catch(() => []) : [];
 
   return (
     <div className="grid gap-6">
@@ -31,6 +31,7 @@ export default async function AdminDashboard() {
         <h1 className="mt-2 font-serif text-4xl">Wedding Invitation Overview</h1>
       </div>
       <DatabaseHealth health={health} />
+      <p className="text-sm text-muted">Application: Online · Storage: {process.env.BLOB_READ_WRITE_TOKEN ? "Configured" : "Not configured"}</p>
       <DashboardStats stats={stats} />
       <div className="grid gap-6 xl:grid-cols-[1fr_1.2fr]">
         <div className="admin-panel p-5">

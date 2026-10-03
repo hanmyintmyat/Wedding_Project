@@ -1,5 +1,6 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin-fetch";
 import { useMemo, useState } from "react";
 import { Copy, Download, Plus, Search, Trash2 } from "lucide-react";
 import GuestForm, { GuestPayload } from "./GuestForm";
@@ -31,13 +32,11 @@ export default function GuestTable({ initialGuests, siteUrl }: { initialGuests: 
 
   async function save(payload: GuestPayload) {
     const url = editing ? `/api/admin/guests/${editing.id}` : "/api/admin/guests";
-    const response = await fetch(url, {
+    const saved = await adminFetch<Guest>(url, {
       method: editing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    if (!response.ok) throw new Error("Could not save the guest. Please try again.");
-    const saved = (await response.json()) as Guest;
     setGuests((current) => (editing ? current.map((guest) => (guest.id === editing.id ? { ...guest, ...saved } : guest)) : [saved, ...current]));
     setEditing(null);
     setInvitation({ name: saved.fullName, url: invitationUrl(saved.fullName) });
@@ -45,8 +44,10 @@ export default function GuestTable({ initialGuests, siteUrl }: { initialGuests: 
   }
 
   async function remove(id: string) {
-    await fetch(`/api/admin/guests/${id}`, { method: "DELETE" });
-    setGuests((current) => current.filter((guest) => guest.id !== id));
+    try {
+      await adminFetch(`/api/admin/guests/${id}`, { method: "DELETE" });
+      setGuests((current) => current.filter((guest) => guest.id !== id));
+    } catch (error) { setNotice(error instanceof Error ? error.message : "Could not delete guest."); }
   }
 
   async function copyLink(name: string) {

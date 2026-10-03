@@ -1,6 +1,7 @@
-import { MediaType } from "@prisma/client";
+import { unstable_cache } from "next/cache";
+import { MediaType } from "@/generated/prisma/client";
 import { weddingConfig } from "@/config/wedding.config";
-import { prisma } from "./db";
+import { getPrismaClient } from "./db";
 import { mapPreviewUrl } from "./maps";
 export { greetingFor, slugifyName } from "./invitation-utils";
 
@@ -54,28 +55,35 @@ const fallbackSections = [
   "footer"
 ].map((sectionKey, sortOrder) => ({ sectionKey, enabled: true, sortOrder }));
 
-export async function getWeddingData() {
-  try {
-    const [settings, content, colors, media, sections, theme] = await Promise.all([
-      prisma.weddingSettings.findFirst({ orderBy: { createdAt: "desc" } }),
-      prisma.invitationContent.findFirst({ orderBy: { createdAt: "desc" } }),
-      prisma.dressCodeColor.findMany({ orderBy: { sortOrder: "asc" } }),
-      prisma.mediaAsset.findMany({ orderBy: [{ type: "asc" }, { sortOrder: "asc" }] }),
-      prisma.sectionSetting.findMany({ orderBy: { sortOrder: "asc" } }),
-      prisma.themeSetting.findFirst({ orderBy: { createdAt: "desc" } })
-    ]);
+// Shared content only. Personalization and RSVP are deliberately outside this cache.
+export async function getWeddingDataLive() {
+  const [settings, content, colors, media, sections, theme] = await Promise.all([
+    getPrismaClient().weddingSettings.findFirst({ orderBy: { createdAt: "desc" } }),
+    getPrismaClient().invitationContent.findFirst({ orderBy: { createdAt: "desc" } }),
+    getPrismaClient().dressCodeColor.findMany({ orderBy: { sortOrder: "asc" } }),
+    getPrismaClient().mediaAsset.findMany({ orderBy: [{ type: "asc" }, { sortOrder: "asc" }] }),
+    getPrismaClient().sectionSetting.findMany({ orderBy: { sortOrder: "asc" } }),
+    getPrismaClient().themeSetting.findFirst({ orderBy: { createdAt: "desc" } })
+  ]);
+  return normalizeWeddingData({ settings, content, colors, media, sections, theme });
+}
 
-    return normalizeWeddingData({
-      settings,
-      content,
-      colors,
-      media,
-      sections,
-      theme
-    });
-  } catch {
-    return normalizeWeddingData({});
-  }
+// Keep the existing rendering model; the supported Data Cache persists on Vercel.
+// Do not catch inside this function: failed refreshes must not replace good cache entries.
+const getCachedWeddingData = unstable_cache(getWeddingDataLive, ['wedding-content-v1'], {
+  tags: ['wedding-content'], revalidate: 300
+});
+
+export async function getWeddingData() {
+  try { return await getCachedWeddingData(); }
+  catch { return normalizeWeddingData({}); }
+}
+
+export async function getGuestGreeting(name: string) {
+  try {
+    const guest = await getPrismaClient().guest.findFirst({ where: { fullName: { equals: name, mode: 'insensitive' } } });
+    return guest?.personalizedGreeting || null;
+  } catch { return null; }
 }
 
 async function normalizeWeddingData(input: {
@@ -124,7 +132,7 @@ async function normalizeWeddingData(input: {
         musicVolume: 0.55
       };
 
-  const media = input.media?.length
+  const media = input.media
     ? input.media.map((asset) => {
         if (asset.type === MediaType.GROOM && asset.url === "/images/025eab17-7b4c-4bde-ac3f-caffddb382f7.jpeg") return { ...asset, url: "/images/groom-portrait.jpeg" };
         if (asset.type === MediaType.BRIDE && asset.url === "/images/27ad605a-ef78-4998-8d57-2fb427d1f3f1.jpeg") return { ...asset, url: "/images/bride-portrait.jpeg" };
@@ -159,7 +167,7 @@ async function normalizeWeddingData(input: {
     mapsEmbedUrl: await mapPreviewUrl(settings),
     settings,
     content,
-    colors: input.colors?.length
+    colors: input.colors
       ? input.colors
       : [
           { id: "dusty-blue", name: "Dusty Blue", hex: "#B8C9E8", sortOrder: 0 },
@@ -169,7 +177,7 @@ async function normalizeWeddingData(input: {
           { id: "mauve", name: "Mauve", hex: "#CDB3C8", sortOrder: 4 }
         ],
     media,
-    sections: input.sections?.length ? input.sections : fallbackSections,
+    sections: input.sections ? input.sections : fallbackSections,
     theme: input.theme || fallbackTheme
   };
 }

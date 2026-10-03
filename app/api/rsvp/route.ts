@@ -1,55 +1,41 @@
-import { RSVPStatus } from "@prisma/client";
-import { NextResponse } from "next/server";
-import { ZodError } from "zod";
-import { prisma } from "@/lib/db";
-import { rsvpSchema } from "@/lib/validations";
-import { slugifyName } from "@/lib/invitation-utils";
+import { Prisma } from '@/generated/prisma/client';
+import { ZodError } from 'zod';
+import { getPrismaClient } from '@/lib/db';
+import { rsvpSchema } from '@/lib/validations';
+import { slugifyName } from '@/lib/invitation-utils';
+
+export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   try {
     const data = rsvpSchema.parse(await request.json());
     const fullName = data.guestName.trim();
     const inviteSlug = slugifyName(fullName);
-    const guestCount = data.attendanceStatus === "DECLINED" ? 0 : data.guestCount;
-
-    const guest = await prisma.guest.upsert({
-      where: { inviteSlug },
-      update: {
-        fullName,
-        displayName: fullName,
-        personalizedGreeting: `Dear Beloved ${fullName}`,
-        status: data.attendanceStatus as RSVPStatus
-      },
-      create: {
-        fullName,
-        displayName: fullName,
-        inviteSlug,
-        personalizedGreeting: `Dear Beloved ${fullName}`,
-        status: data.attendanceStatus as RSVPStatus
+    const status = data.attendanceStatus;
+    const guestCount = status === 'DECLINED' ? 0 : data.guestCount;
+    // Retry a conflicting concurrent upsert once. Both writes commit together.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await getPrismaClient().$transaction(async tx => {
+          const existing = await tx.guest.findFirst({ where: { OR: [{ inviteSlug }, { fullName: { equals: fullName, mode: 'insensitive' } }] } });
+          const guest = existing
+            ? await tx.guest.update({ where: { id: existing.id }, data: { status } })
+            : await tx.guest.upsert({ where: { inviteSlug }, update: { status }, create: { fullName, inviteSlug, status, personalizedGreeting: `Dear Beloved ${fullName}` } });
+          await tx.rSVP.upsert({
+            where: { guestId: guest.id },
+            update: { attendanceStatus: status, guestCount, message: data.message || null },
+            create: { guestId: guest.id, attendanceStatus: status, guestCount, message: data.message || null }
+          });
+        });
+        return Response.json({ ok: true, success: true, message: "RSVP received" });
+      } catch (error) {
+        if (attempt === 0 && error instanceof Prisma.PrismaClientKnownRequestError && ['P2002', 'P2034'].includes(error.code)) continue;
+        throw error;
       }
-    });
-
-    const rsvp = await prisma.rSVP.upsert({
-      where: { guestId: guest.id },
-      update: {
-        attendanceStatus: data.attendanceStatus as RSVPStatus,
-        guestCount,
-        message: data.message || null
-      },
-      create: {
-        guestId: guest.id,
-        attendanceStatus: data.attendanceStatus as RSVPStatus,
-        guestCount,
-        message: data.message || null
-      }
-    });
-
-    return NextResponse.json({ ok: true, rsvp });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json({ message: error.issues[0]?.message || "Invalid RSVP." }, { status: 400 });
     }
-    console.error("[rsvp] Unable to submit RSVP", error);
-    return NextResponse.json({ message: "Unable to submit RSVP." }, { status: 500 });
+  } catch (error) {
+    if (error instanceof ZodError || error instanceof SyntaxError) return Response.json({ success: false, message: 'Please check your RSVP details.' }, { status: 400 });
+    console.error('[rsvp] Save unavailable', error instanceof Prisma.PrismaClientKnownRequestError ? error.code : error instanceof Error ? error.name : 'unknown');
+    return Response.json({ success: false, message: "We couldn't save your RSVP right now. Please try again." }, { status: 503 });
   }
 }

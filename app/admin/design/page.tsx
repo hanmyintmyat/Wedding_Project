@@ -2,13 +2,13 @@ import DressCodeManager from "@/components/admin/DressCodeManager";
 import ThemeSettings from "@/components/admin/ThemeSettings";
 import PreviewPanel from "@/components/admin/PreviewPanel";
 import { getAdminSession } from "@/lib/auth";
-import { getWeddingData } from "@/lib/invitation";
+import { getWeddingDataLive } from "@/lib/invitation";
 import { themeSchema } from "@/lib/validations";
 import { redirect } from "next/navigation";
 
 export default async function DesignPage() {
   if (!(await getAdminSession())) redirect("/admin/login");
-  const data = await getWeddingData();
+  const data = await getWeddingDataLive();
   return (
     <div className="grid gap-6">
       <div>

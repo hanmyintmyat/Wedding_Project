@@ -34,9 +34,9 @@ export default function InvitationCover({
         <p className="mb-6 max-w-md whitespace-pre-line font-serif text-sm leading-7 text-white/90 sm:text-base">{data.content.englishIntro}</p>
         <p className="eyebrow max-w-full text-[clamp(0.62rem,1.8vw,0.78rem)] text-white/80">{data.content.landingHeading}</p>
         <h1 className="mt-[clamp(0.7rem,2.2dvh,1.65rem)] max-w-full font-serif leading-[0.88] text-white">
-          <span className="script block max-w-full whitespace-nowrap text-[clamp(2.5rem,9vw,5rem)]">{data.settings.groomName}</span>
+          <span className="script block max-w-full break-words text-[clamp(2rem,8.6vw,5rem)]">{data.settings.groomName}</span>
           <span className="script block py-[clamp(0.08rem,0.7dvh,0.35rem)] text-[clamp(2rem,6vw,3.5rem)] text-white/90">&</span>
-          <span className="script block max-w-full whitespace-nowrap text-[clamp(2.5rem,9vw,5rem)]">{data.settings.brideName}</span>
+          <span className="script block max-w-full break-words text-[clamp(2rem,8.6vw,5rem)]">{data.settings.brideName}</span>
         </h1>
         <p className="mt-[clamp(0.85rem,2.4dvh,1.8rem)] font-serif text-[clamp(0.86rem,2.4vw,1.15rem)] tracking-[0.32em] text-white/90">{coverDate}</p>
         <div className="my-[clamp(0.9rem,2.7dvh,1.9rem)] h-px w-24 bg-white/55" />

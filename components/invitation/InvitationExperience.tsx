@@ -17,20 +17,20 @@ import FloatingNavigation from "./FloatingNavigation";
 import Footer from "./Footer";
 import MusicPlayer from "./MusicPlayer";
 
-export default function InvitationExperience({ data, guestName }: { data: WeddingData; guestName: string }) {
+export default function InvitationExperience({ data, guestName, personalizedGreeting }: { data: WeddingData; guestName: string; personalizedGreeting?: string | null }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const music = data.media.find((asset) => asset.type === "MUSIC")?.url || "/music/wildest-dreams.mp3";
   const [opened, setOpened] = useState(false);
   const sections = useMemo(() => data.sections.filter((section) => section.enabled).sort((a, b) => a.sortOrder - b.sortOrder), [data.sections]);
   const hero = data.media.find((asset) => asset.type === "HERO")?.url || "/images/MainPhoto.jpeg";
-  const greeting = greetingFor(data.content.greetingTemplate, guestName);
+  const greeting = personalizedGreeting || greetingFor(data.content.greetingTemplate, guestName);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !data.settings.musicEnabled) return;
     audio.volume = data.settings.musicVolume;
-    void audio.play().catch(() => undefined);
+
   }, [data.settings.musicEnabled, data.settings.musicVolume, music]);
 
   function openInvitation() {
@@ -52,7 +52,7 @@ export default function InvitationExperience({ data, guestName }: { data: Weddin
     >
       {data.settings.musicEnabled && (
         <>
-          <audio ref={audioRef} src={music} autoPlay loop preload="auto" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
+          <audio ref={audioRef} src={music} loop preload="none" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
           <MusicPlayer audioRef={audioRef} title={data.settings.musicTitle} playing={playing} />
         </>
       )}

@@ -1,9 +1,9 @@
-import { prisma } from "./db";
+import { getPrismaClient } from "./db";
 import { contentSchema, themeSchema, weddingSettingsSchema } from "./validations";
 
 export async function saveWeddingSettings(input: unknown) {
   const data = weddingSettingsSchema.parse(input);
-  const existing = await prisma.weddingSettings.findFirst();
+  const existing = await getPrismaClient().weddingSettings.findFirst();
   const payload = {
     ...data,
     weddingDate: new Date(`${data.weddingDate}T10:00:00+06:30`),
@@ -13,22 +13,22 @@ export async function saveWeddingSettings(input: unknown) {
     longitude: data.longitude ?? null
   };
   return existing
-    ? prisma.weddingSettings.update({ where: { id: existing.id }, data: payload })
-    : prisma.weddingSettings.create({ data: payload });
+    ? getPrismaClient().weddingSettings.update({ where: { id: existing.id }, data: payload })
+    : getPrismaClient().weddingSettings.create({ data: payload });
 }
 
 export async function saveContent(input: unknown) {
   const data = contentSchema.parse(input);
-  const existing = await prisma.invitationContent.findFirst();
+  const existing = await getPrismaClient().invitationContent.findFirst();
   return existing
-    ? prisma.invitationContent.update({ where: { id: existing.id }, data })
-    : prisma.invitationContent.create({ data });
+    ? getPrismaClient().invitationContent.update({ where: { id: existing.id }, data })
+    : getPrismaClient().invitationContent.create({ data });
 }
 
 export async function saveTheme(input: unknown) {
   const data = themeSchema.parse(input);
-  const existing = await prisma.themeSetting.findFirst();
+  const existing = await getPrismaClient().themeSetting.findFirst();
   return existing
-    ? prisma.themeSetting.update({ where: { id: existing.id }, data })
-    : prisma.themeSetting.create({ data });
+    ? getPrismaClient().themeSetting.update({ where: { id: existing.id }, data })
+    : getPrismaClient().themeSetting.create({ data });
 }

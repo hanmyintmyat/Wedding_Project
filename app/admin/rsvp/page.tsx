@@ -1,11 +1,11 @@
 import RSVPTable from "@/components/admin/RSVPTable";
 import { getAdminSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getPrismaClient } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 export default async function RSVPAdminPage() {
   if (!(await getAdminSession())) redirect("/admin/login");
-  const rsvps = await prisma.rSVP.findMany({ include: { guest: true }, orderBy: { updatedAt: "desc" } }).catch(() => []);
+  const rsvps = await getPrismaClient().rSVP.findMany({ include: { guest: true }, orderBy: { updatedAt: "desc" } });
   const serializable = rsvps.map((rsvp) => ({ ...rsvp, createdAt: rsvp.createdAt.toISOString(), updatedAt: rsvp.updatedAt.toISOString(), guest: { fullName: rsvp.guest.fullName } }));
   return (
     <div className="grid gap-6">

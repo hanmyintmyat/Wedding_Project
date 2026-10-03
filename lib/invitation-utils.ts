@@ -4,5 +4,5 @@ export function greetingFor(template: string, guestName?: string | null) {
 }
 
 export function slugifyName(name: string) {
-  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "guest";
+  return name.toLowerCase().trim().normalize("NFKC").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/(^-|-$)/g, "") || "guest";
 }

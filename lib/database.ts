@@ -1,9 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { validatePostgresUrl } from "./postgres-config";
 
-type GlobalWithPrisma = typeof globalThis & { prisma?: PrismaClient };
-
-const POSTGRES_URL_PATTERN = /^postgres(?:ql)?:\/\/[^:\s]+:[^@\s]+@[^:\s]+:\d+\/[^?\s]+(?:\?.*)?$/;
+type GlobalWithPrisma = typeof globalThis & { postgresPrisma7?: PrismaClient };
 
 export class DatabaseConfigurationError extends Error {
   constructor(message: string) {
@@ -13,26 +12,12 @@ export class DatabaseConfigurationError extends Error {
 }
 
 export function getDatabaseUrl({ direct = false }: { direct?: boolean } = {}) {
-  const url = direct ? process.env.DIRECT_URL || process.env.DATABASE_URL : process.env.DATABASE_URL;
+  const url = direct ? process.env.DIRECT_URL : process.env.DATABASE_URL;
   return url?.trim() || "";
 }
 
 export function validateDatabaseUrl(url = getDatabaseUrl()) {
-  if (!url) {
-    return {
-      ok: false,
-      message: "DATABASE_URL is not set. Expected postgresql://USERNAME:PASSWORD@HOST:PORT/DATABASE?schema=public"
-    };
-  }
-
-  if (!POSTGRES_URL_PATTERN.test(url)) {
-    return {
-      ok: false,
-      message: "DATABASE_URL must use postgresql://USERNAME:PASSWORD@HOST:PORT/DATABASE?schema=public"
-    };
-  }
-
-  return { ok: true, message: "DATABASE_URL is present." };
+  return validatePostgresUrl(url);
 }
 
 export function getPrismaClient() {
@@ -44,12 +29,18 @@ export function getPrismaClient() {
 
   const globalForPrisma = globalThis as GlobalWithPrisma;
 
-  if (!globalForPrisma.prisma) {
-    const adapter = new PrismaPg({ connectionString: getDatabaseUrl() });
-    globalForPrisma.prisma = new PrismaClient({ adapter });
+  if (!globalForPrisma.postgresPrisma7) {
+    const adapter = new PrismaPg({
+      connectionString: getDatabaseUrl(),
+      max: 3,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 20_000,
+      allowExitOnIdle: true
+    });
+    globalForPrisma.postgresPrisma7 = new PrismaClient({ adapter });
   }
 
-  return globalForPrisma.prisma;
+  return globalForPrisma.postgresPrisma7;
 }
 
 export async function getDatabaseHealth() {
@@ -71,7 +62,7 @@ export async function getDatabaseHealth() {
       detail: "Database connection is healthy."
     };
   } catch (error) {
-    console.error("[database] Health check failed", error);
+    console.error("[database] Health check failed", error instanceof DatabaseConfigurationError ? "configuration" : "unavailable");
     return {
       connected: false,
       status: "Connection Error",

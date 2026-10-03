@@ -1,11 +1,11 @@
 import EventSettingsForm from "@/components/admin/EventSettingsForm";
 import { getAdminSession } from "@/lib/auth";
-import { getWeddingData } from "@/lib/invitation";
+import { getWeddingDataLive } from "@/lib/invitation";
 import { redirect } from "next/navigation";
 
 export default async function EventPage() {
   if (!(await getAdminSession())) redirect("/admin/login");
-  const data = await getWeddingData();
+  const data = await getWeddingDataLive();
   const settings = {
     ...data.settings,
     weddingDate: data.settings.weddingDate.slice(0, 10),

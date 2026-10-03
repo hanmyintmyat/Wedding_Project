@@ -1,5 +1,5 @@
 import InvitationExperience from "@/components/invitation/InvitationExperience";
-import { getWeddingData } from "@/lib/invitation";
+import { getWeddingData, getGuestGreeting } from "@/lib/invitation";
 
 type Props = {
   searchParams: Promise<{ to?: string }>;
@@ -7,6 +7,7 @@ type Props = {
 
 export default async function InvitePage({ searchParams }: Props) {
   const { to } = await searchParams;
-  const data = await getWeddingData();
-  return <InvitationExperience data={data} guestName={to ? decodeURIComponent(to) : "Beloved Guest"} />;
+  const guestName = typeof to === "string" ? to.trim().slice(0, 120) : "Beloved Guest";
+  const [data, personalizedGreeting] = await Promise.all([getWeddingData(), to ? getGuestGreeting(guestName) : Promise.resolve(null)]);
+  return <InvitationExperience data={data} guestName={guestName || "Beloved Guest"} personalizedGreeting={personalizedGreeting} />;
 }

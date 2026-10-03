@@ -1,17 +1,21 @@
 import dotenv from "dotenv";
-import { PrismaClient, RSVPStatus, MediaType } from "@prisma/client";
+import { PrismaClient, RSVPStatus, MediaType } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { validatePostgresUrl } from "../lib/postgres-config";
 import bcrypt from "bcryptjs";
 import { weddingConfig } from "../config/wedding.config";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+dotenv.config({ path: ".env.local", quiet: true });
+dotenv.config({ quiet: true });
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DIRECT_URL;
 
 if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required to seed the database.");
+  throw new Error("DIRECT_URL is required to seed the database.");
 }
+
+const validation = validatePostgresUrl(databaseUrl, true);
+if (!validation.ok) throw new Error(validation.message);
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: databaseUrl })
@@ -26,7 +30,7 @@ const guests = [
   ["Phyo Thandar Aung", RSVPStatus.ACCEPTED, 2],
   ["Ei Ei Khin", RSVPStatus.PENDING, 1],
   ["Aung Ko Ko", RSVPStatus.DECLINED, 1],
-  ["Su Myat Noe", RSVPStatus.ACCEPTED, 3],
+  ["Su Myat Noe", RSVPStatus.ACCEPTED, 2],
   ["Htet Htet Win", RSVPStatus.PENDING, 1],
   ["Nay Lin Tun", RSVPStatus.ACCEPTED, 2],
   ["Thiri Shwe", RSVPStatus.DECLINED, 1],
@@ -64,8 +68,9 @@ function slugify(name: string) {
 }
 
 async function main() {
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
-  const adminPassword = process.env.ADMIN_PASSWORD || "ChangeMe123!";
+  const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase().trim();
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminEmail || !adminPassword || adminPassword.length < 12 || adminPassword === "ChangeMe123!") throw new Error("Set ADMIN_EMAIL and an ADMIN_PASSWORD of at least 12 characters before seeding.");
 
   await prisma.user.upsert({
     where: { email: adminEmail },
@@ -78,8 +83,9 @@ async function main() {
 
   const existingSettings = await prisma.weddingSettings.findFirst();
   if (!existingSettings) {
-    await prisma.weddingSettings.create({
-      data: {
+    await prisma.weddingSettings.upsert({
+      where: { id: "seed-settings" }, update: {},
+      create: { id: "seed-settings",
         groomName: weddingConfig.groom,
         brideName: weddingConfig.bride,
         weddingDate: new Date(`${weddingConfig.date}T10:00:00+06:30`),
@@ -99,8 +105,9 @@ async function main() {
   }
 
   if (!(await prisma.invitationContent.findFirst())) {
-    await prisma.invitationContent.create({
-      data: {
+    await prisma.invitationContent.upsert({
+      where: { id: "seed-content" }, update: {},
+      create: { id: "seed-content",
         landingHeading: "The Wedding Of",
         greetingTemplate: "Dear Beloved {name}",
         englishIntro: "We joyfully request the honor of your presence\nat the celebration of our marriage.",
@@ -125,7 +132,7 @@ async function main() {
   for (const [sortOrder, [name, hex]] of colors.entries()) {
     await prisma.dressCodeColor.upsert({
       where: { id: `seed-color-${sortOrder}` },
-      update: { name, hex, sortOrder },
+      update: {},
       create: { id: `seed-color-${sortOrder}`, name, hex, sortOrder }
     });
   }
@@ -133,14 +140,15 @@ async function main() {
   for (const [sortOrder, sectionKey] of sections.entries()) {
     await prisma.sectionSetting.upsert({
       where: { sectionKey },
-      update: { sortOrder },
+      update: {},
       create: { sectionKey, enabled: true, sortOrder }
     });
   }
 
   if (!(await prisma.themeSetting.findFirst())) {
-    await prisma.themeSetting.create({
-      data: {
+    await prisma.themeSetting.upsert({
+      where: { id: "seed-theme" }, update: {},
+      create: { id: "seed-theme",
         primaryColor: "#75856f",
         secondaryColor: "#d9a8a7",
         backgroundColor: "#fffaf2",
@@ -153,30 +161,31 @@ async function main() {
     });
   }
 
-  await prisma.mediaAsset.upsert({
+  if (!(await prisma.mediaAsset.count({ where: { type: MediaType.HERO } }))) await prisma.mediaAsset.upsert({
     where: { id: "seed-hero" },
-    update: { url: "/images/MainPhoto.jpeg" },
+    update: {},
     create: { id: "seed-hero", type: MediaType.HERO, url: "/images/MainPhoto.jpeg", alt: "Wedding couple", sortOrder: 0 }
   });
-  await prisma.mediaAsset.upsert({
+  if (!(await prisma.mediaAsset.count({ where: { type: MediaType.GROOM } }))) await prisma.mediaAsset.upsert({
     where: { id: "seed-groom" },
-    update: { url: "/images/groom-portrait.jpeg" },
+    update: {},
     create: { id: "seed-groom", type: MediaType.GROOM, url: "/images/groom-portrait.jpeg", alt: "Myo Thwin Kyaw", sortOrder: 0 }
   });
-  await prisma.mediaAsset.upsert({
+  if (!(await prisma.mediaAsset.count({ where: { type: MediaType.BRIDE } }))) await prisma.mediaAsset.upsert({
     where: { id: "seed-bride" },
-    update: { url: "/images/bride-portrait.jpeg" },
+    update: {},
     create: { id: "seed-bride", type: MediaType.BRIDE, url: "/images/bride-portrait.jpeg", alt: "Khaing Su Wai", sortOrder: 0 }
   });
-  await prisma.mediaAsset.upsert({
+  if (!(await prisma.mediaAsset.count({ where: { type: MediaType.MUSIC } }))) await prisma.mediaAsset.upsert({
     where: { id: "seed-music" },
-    update: { url: weddingConfig.music },
+    update: {},
     create: { id: "seed-music", type: MediaType.MUSIC, url: weddingConfig.music, alt: weddingConfig.musicTitle, sortOrder: 0 }
   });
-  for (const [sortOrder, file] of galleryImages.entries()) {
+  const galleryExists = await prisma.mediaAsset.count({ where: { type: MediaType.GALLERY } });
+  for (const [sortOrder, file] of (galleryExists ? [] : galleryImages).entries()) {
     await prisma.mediaAsset.upsert({
       where: { id: `seed-gallery-${sortOrder}` },
-      update: { url: `/images/${file}`, sortOrder },
+      update: {},
       create: { id: `seed-gallery-${sortOrder}`, type: MediaType.GALLERY, url: `/images/${file}`, alt: "Wedding gallery photo", sortOrder }
     });
   }
@@ -184,12 +193,7 @@ async function main() {
   for (const [name, status, guestCount] of guests) {
     const guest = await prisma.guest.upsert({
       where: { inviteSlug: slugify(name) },
-      update: {
-        status,
-        fullName: name,
-        displayName: name.split(" ")[0],
-        personalizedGreeting: `Dear Beloved ${name}`
-      },
+      update: {},
       create: {
         fullName: name,
         displayName: name.split(" ")[0],
@@ -203,16 +207,14 @@ async function main() {
     if (status !== RSVPStatus.PENDING) {
       await prisma.rSVP.upsert({
         where: { guestId: guest.id },
-        update: { attendanceStatus: status, guestCount },
+        update: {},
         create: {
           guestId: guest.id,
           attendanceStatus: status,
-          guestCount,
+          guestCount: status === RSVPStatus.DECLINED ? 0 : guestCount,
           message: status === RSVPStatus.ACCEPTED ? "So happy to celebrate with you." : "Sending love from afar."
         }
       });
-    } else {
-      await prisma.rSVP.deleteMany({ where: { guestId: guest.id } });
     }
   }
 }
@@ -221,8 +223,8 @@ main()
   .then(async () => {
     await prisma.$disconnect();
   })
-  .catch(async (error) => {
-    console.error(error);
+  .catch(async () => {
+    console.error("Seed failed. Verify database connectivity and admin configuration.");
     await prisma.$disconnect();
     process.exit(1);
   });

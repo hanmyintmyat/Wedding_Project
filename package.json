@@ -8,43 +8,56 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "postinstall": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "check:production": "tsx scripts/check-production.ts",
+    "media:cloud": "tsx scripts/migrate-media.ts",
+    "data:export": "tsx scripts/transfer-data.ts export",
+    "data:import": "tsx scripts/transfer-data.ts import"
   },
   "dependencies": {
-    "@hookform/resolvers": "latest",
-    "@prisma/adapter-pg": "^7.10.0",
-    "@prisma/client": "latest",
-    "@vercel/blob": "latest",
-    "bcryptjs": "latest",
-    "clsx": "latest",
-    "dotenv": "^18.0.5",
-    "framer-motion": "latest",
-    "lucide-react": "latest",
-    "next": "latest",
-    "next-auth": "latest",
-    "pg": "^8.23.1",
-    "react": "latest",
-    "react-dom": "latest",
-    "react-hook-form": "latest",
-    "zod": "latest"
+    "@hookform/resolvers": "5.9.1",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "@vercel/blob": "2.8.0",
+    "bcryptjs": "3.0.3",
+    "clsx": "2.1.1",
+    "framer-motion": "14.0.0",
+    "lucide-react": "1.50.0",
+    "next": "16.3.8",
+    "next-auth": "4.24.15",
+    "pg": "8.23.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-hook-form": "7.89.0",
+    "zod": "4.6.5"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "latest",
-    "@types/bcryptjs": "latest",
-    "@types/node": "latest",
-    "@types/pg": "^8.23.1",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "eslint": "latest",
-    "eslint-config-next": "latest",
-    "prisma": "^7.10.0",
-    "tailwindcss": "latest",
-    "tsx": "latest",
-    "typescript": "latest"
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/bcryptjs": "3.0.0",
+    "@types/node": "26.6.4",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "dotenv": "18.0.5",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.8",
+    "prisma": "7.10.0",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
+  "overrides": {
+    "prisma": {
+      "mysql2": "3.24.5"
+    },
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.2"
+    }
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

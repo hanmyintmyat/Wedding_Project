@@ -1,5 +1,6 @@
 "use client";
 
+import { adminFetch } from "@/lib/admin-fetch";
 import { useMemo, useState } from "react";
 import { Download, Trash2 } from "lucide-react";
 
@@ -14,17 +15,39 @@ type RSVP = {
 };
 
 export default function RSVPTable({ initialRsvps }: { initialRsvps: RSVP[] }) {
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
   const [rsvps, setRsvps] = useState(initialRsvps);
   const [status, setStatus] = useState("ALL");
   const filtered = useMemo(() => rsvps.filter((rsvp) => status === "ALL" || rsvp.attendanceStatus === status), [rsvps, status]);
 
   async function remove(id: string) {
-    await fetch(`/api/admin/rsvp/${id}`, { method: "DELETE" });
-    setRsvps((current) => current.filter((rsvp) => rsvp.id !== id));
+    setSaving(true);
+    try {
+      await adminFetch(`/api/admin/rsvp/${id}`, { method: "DELETE" });
+      setRsvps(current => current.filter(rsvp => rsvp.id !== id));
+      setMessage("RSVP deleted.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not delete RSVP."); }
+    finally { setSaving(false); }
+
+  }
+
+  async function update(rsvp: RSVP, attendanceStatus: "ACCEPTED" | "DECLINED") {
+    setSaving(true);
+    try {
+      const updated = await adminFetch<RSVP>(`/api/admin/rsvp/${rsvp.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guestName: rsvp.guest.fullName, attendanceStatus, guestCount: attendanceStatus === "DECLINED" ? 0 : Math.max(1, Math.min(2, rsvp.guestCount)), message: rsvp.message || "" })
+      });
+      setRsvps(current => current.map(item => item.id === updated.id ? updated : item));
+      setMessage("RSVP updated.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not update RSVP."); }
+    finally { setSaving(false); }
   }
 
   return (
     <div className="admin-panel overflow-hidden">
+      <p role="status" className="p-4 text-sm text-muted">{message}</p>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-sage/15 p-4">
         <select value={status} onChange={(event) => setStatus(event.target.value)} className="rounded-full border border-sage/20 bg-white px-3 py-2 text-sm">
           <option value="ALL">All</option>
@@ -52,12 +75,12 @@ export default function RSVPTable({ initialRsvps }: { initialRsvps: RSVP[] }) {
             {filtered.map((rsvp) => (
               <tr key={rsvp.id} className="border-t border-sage/10">
                 <td className="px-4 py-3 font-bold text-ink">{rsvp.guest.fullName}</td>
-                <td className="px-4 py-3">{rsvp.attendanceStatus}</td>
+                <td className="px-4 py-3"><select aria-label={`Attendance for ${rsvp.guest.fullName}`} value={rsvp.attendanceStatus} disabled={saving} onChange={event => update(rsvp, event.target.value as "ACCEPTED" | "DECLINED")} className="admin-input"><option value="PENDING" disabled>Pending</option><option value="ACCEPTED">Accepted</option><option value="DECLINED">Declined</option></select></td>
                 <td className="px-4 py-3">{rsvp.guestCount}</td>
                 <td className="max-w-xs px-4 py-3 text-muted">{rsvp.message || "—"}</td>
                 <td className="px-4 py-3 text-muted">{new Date(rsvp.createdAt).toLocaleDateString()}</td>
                 <td className="px-4 py-3">
-                  <button aria-label="Delete RSVP" onClick={() => remove(rsvp.id)} className="grid h-9 w-9 place-items-center rounded-full border border-red-200 text-red-700">
+                  <button disabled={saving} aria-label="Delete RSVP" onClick={() => remove(rsvp.id)} className="grid h-9 w-9 place-items-center rounded-full border border-red-200 text-red-700">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </td>
