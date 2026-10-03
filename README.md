@@ -120,3 +120,4 @@ The default music URL is `/music/wildest-dreams.mp3`. Add the licensed audio fil
 - Change photos/music: Admin > Media
 - Change dress-code colors: Admin > Design
 - Enable, disable, or reorder sections: Admin > Settings
+# Wedding_Project
