@@ -5,12 +5,17 @@ type Venue = {
   venueName: string;
 };
 
-export function buildVenueMapsLinks(venue: Venue) {
+export function getVenueCoordinates(venue: Pick<Venue, 'latitude' | 'longitude'>) {
   const { latitude, longitude } = venue;
-  const coordinates = latitude != null && longitude != null
+  const valid = latitude != null && longitude != null
     && Number.isFinite(latitude) && Number.isFinite(longitude)
     && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;
-  const destination = coordinates ? `${latitude},${longitude}` : venue.venueAddress.trim() || venue.venueName.trim();
+  return valid ? { lat: latitude, lng: longitude } : null;
+}
+
+export function buildVenueMapsLinks(venue: Venue) {
+  const coordinates = getVenueCoordinates(venue);
+  const destination = coordinates ? `${coordinates.lat},${coordinates.lng}` : venue.venueAddress.trim() || venue.venueName.trim();
   const query = encodeURIComponent(destination);
   return {
     location: destination ? `https://www.google.com/maps/search/?api=1&query=${query}` : '',
