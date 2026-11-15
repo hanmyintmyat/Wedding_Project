@@ -4,15 +4,17 @@ import Image from 'next/image';
 import { ZodError } from 'zod';
 import { Upload } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
-import { upload } from '@vercel/blob/client';
+import { useRouter } from 'next/navigation';
 import { adminFetch } from '@/lib/admin-fetch';
+import { uploadMedia } from '@/lib/media-upload';
 import { preparePhoto } from '@/lib/prepare-photo';
 import { uploadMetaSchema } from '@/lib/media-validation';
 
 type Asset = { id: string; type: 'HERO' | 'GROOM' | 'BRIDE' | 'GALLERY' | 'MUSIC'; url: string; alt: string | null; sortOrder: number };
-export default function MediaManager({ initialAssets }: { initialAssets: Asset[] }) {
+export default function MediaManager({ initialAssets, uploadConfigured }: { initialAssets: Asset[]; uploadConfigured: boolean }) {
+  const router = useRouter();
   const [assets, setAssets] = useState(initialAssets);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(uploadConfigured ? '' : 'Media upload is not configured for this deployment. Connect a public Vercel Blob store and set BLOB_READ_WRITE_TOKEN on the server.');
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [type, setType] = useState<Asset['type']>('HERO');
@@ -20,7 +22,7 @@ export default function MediaManager({ initialAssets }: { initialAssets: Asset[]
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy) return;
+    if (busy || !uploadConfigured) return;
     const form = event.currentTarget;
     const values = new FormData(form);
     setMessage(''); setBusy(true); setProgress(0);
@@ -34,14 +36,11 @@ export default function MediaManager({ initialAssets }: { initialAssets: Asset[]
       const meta = uploadMetaSchema.parse({ type, alt: values.get('alt') || '', sortOrder: Number(values.get('sortOrder') || 0), replaceId: replaceId || undefined, filename: file.name, contentType: file.type, size: file.size });
       const id = crypto.randomUUID();
       const filename = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
-      const blob = await upload(`wedding/${id}/${filename}`, file, {
-        access: 'public', handleUploadUrl: '/api/admin/media/upload',
-        clientPayload: JSON.stringify(meta),
-        onUploadProgress: event => setProgress(Math.round(event.percentage))
-      });
+      const blob = await uploadMedia(`wedding/${id}/${filename}`, file, meta, setProgress);
       // Finalize immediately; signed callbacks retry independently if the browser closes.
       await adminFetch<Asset>('/api/admin/media', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, url: blob.url }) });
       setAssets(await adminFetch<Asset[]>('/api/admin/media'));
+      router.refresh();
       setMessage('Media saved. The public invitation is updated.');
       setReplaceId(''); form.reset();
     } catch (error) { setMessage(error instanceof ZodError ? error.issues[0]?.message || 'Check the selected file.' : error instanceof Error ? error.message : 'Upload failed. Please try again.'); }
@@ -54,6 +53,7 @@ export default function MediaManager({ initialAssets }: { initialAssets: Asset[]
     try {
       await adminFetch(`/api/admin/media?id=${encodeURIComponent(asset.id)}`, { method: 'DELETE' });
       setAssets(current => current.filter(item => item.id !== asset.id));
+      router.refresh();
       setMessage('Media deleted.');
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not delete media.'); }
     finally { setBusy(false); }
@@ -81,8 +81,8 @@ export default function MediaManager({ initialAssets }: { initialAssets: Asset[]
       <label className="admin-label">Media Type<select name="type" value={type} disabled={busy} onChange={event => { setType(event.target.value as Asset['type']); setReplaceId(''); }} className="admin-input"><option value="HERO">Main Hero Photo</option><option value="GROOM">Groom Photo</option><option value="BRIDE">Bride Photo</option><option value="GALLERY">Gallery Image</option><option value="MUSIC">Background Music</option></select></label>
       <label className="admin-label">Alt / Music Title<input name="alt" maxLength={160} className="admin-input" /></label>
       <label className="admin-label">Sort Order<input name="sortOrder" type="number" min={0} defaultValue={0} className="admin-input" /></label>
-      <label className="admin-label">File<input name="file" type="file" accept={type === 'MUSIC' ? '.mp3,.m4a,.ogg' : '.jpg,.jpeg,.png,.webp,.avif'} className="admin-input" required disabled={busy} /></label>
-      <button disabled={busy} className="inline-flex items-center justify-center gap-2 rounded-full bg-sage px-5 py-2 text-sm font-bold text-white disabled:opacity-60"><Upload className="h-4 w-4" />{busy ? `Saving… ${progress}%` : replaceId ? 'Replace' : 'Upload'}</button>
+      <label className="admin-label">File<input name="file" type="file" accept={type === 'MUSIC' ? '.mp3,.m4a,.ogg' : '.jpg,.jpeg,.png,.webp,.avif'} className="admin-input" required disabled={busy || !uploadConfigured} /></label>
+      <button disabled={busy || !uploadConfigured} className="inline-flex items-center justify-center gap-2 rounded-full bg-sage px-5 py-2 text-sm font-bold text-white disabled:opacity-60"><Upload className="h-4 w-4" />{busy ? `Saving… ${progress}%` : replaceId ? 'Replace' : 'Upload'}</button>
       {replaceId && <button type="button" disabled={busy} onClick={() => setReplaceId('')} className="text-sm text-sage">Cancel replacement</button>}
       <p role="status" className="break-words text-sm leading-6 text-muted">{message}</p>
     </form>

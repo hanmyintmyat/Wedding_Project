@@ -2,6 +2,7 @@ import MediaManager from "@/components/admin/MediaManager";
 import { getAdminSession } from "@/lib/auth";
 import { getWeddingDataLive } from "@/lib/invitation";
 import { redirect } from "next/navigation";
+import { isBlobStorageConfigured } from "@/lib/media";
 
 export default async function MediaPage() {
   if (!(await getAdminSession())) redirect("/admin/login");
@@ -12,7 +13,7 @@ export default async function MediaPage() {
         <p className="eyebrow">Media</p>
         <h1 className="mt-2 font-serif text-4xl">Photos & Music</h1>
       </div>
-      <MediaManager initialAssets={data.media} />
+      <MediaManager initialAssets={data.media} uploadConfigured={isBlobStorageConfigured()} />
     </div>
   );
 }

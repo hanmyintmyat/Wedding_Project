@@ -99,6 +99,8 @@ Upload bytes go directly to Blob, bypassing Vercel's 4.5 MB function request lim
 
 ## Routine checks and maintenance
 
+Manual k6 load tests are documented in [load-tests/README.md](load-tests/README.md), including installation and exact commands. `load-tests/invitation.js` provides the local 10/25/50-user GET workload and an explicitly opt-in, 10-user production profile. `load-tests/rsvp.js` submits only 15 synthetic RSVPs against a separate isolated test database, verifies persisted records, and cleans up only its own fixtures. Nothing runs automatically or changes production behavior.
+
 ```bash
 npx prisma generate
 npm run lint

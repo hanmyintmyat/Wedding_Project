@@ -91,6 +91,16 @@ Admin page queries and browser create/update/delete API actions check server-sid
 
 ## Verification and remaining configuration
 
+### Troubleshooting media uploads
+
+Existing images loading does not prove upload storage is configured: bundled images and public Blob URLs can be read without a write token. This project's `handleUpload` flow requires the server-only `BLOB_READ_WRITE_TOKEN`; a store connection with OIDC alone does not provide it.
+
+In Vercel, open **Project → Storage → Blob**. Connect the existing **public** store, or create one only if needed. Under the store's **Projects → Update Project Connection**, include **Production** and enable **Add a read-write token env var to this connection**. Use the default `BLOB_READ_WRITE_TOKEN` name without a custom prefix. Confirm it appears in **Project → Settings → Environment Variables → Production**, then redeploy so the new runtime receives it. Never use a `NEXT_PUBLIC_` prefix or paste the token into browser code. Keep Preview storage separate.
+
+For local uploads, include **Development** in the store connection and pull the variables privately into `.env.local`; restart the development server. Without a token the media library stays readable, uploads are disabled, and a configuration message is shown. Browser finalization works locally; testing the signed completion callback requires a reachable HTTPS tunnel configured with `VERCEL_BLOB_CALLBACK_URL`.
+
+The admin requests a path/MIME/size-limited client token from the protected endpoint and uses `put` from `@vercel/blob/client` to send file bytes directly to Blob. Handling this token exchange explicitly preserves the endpoint's safe configuration/authentication errors instead of the SDK's generic token-retrieval message. No original file bytes pass through a Vercel Function. If the endpoint reports incomplete database setup, apply the already committed migrations with `npm run prisma:deploy`; do not reset the database.
+
 See PRODUCTION_VALIDATION.md for live Prisma Postgres, seed and RSVP results from preparation. The deployment audit confirmed no private environment files in the current Git index or reachable Git history. Only the blank .env.example is tracked. A historical commit contained the former development Auth secret, which was also still configured locally. The active local Auth secret was rotated privately; use this new secret (or another freshly generated one) in Vercel. The old value remains inactive in Git history. No current database/Auth/Blob secret values are present in tracked working files.
 
 The local development configuration still needs a strong admin password, Blob token and production HTTPS site/auth URLs before `npm run check:production` can pass. Blob upload code is ready, but real production uploads must be tested with a connected store. No custom domain has been claimed or connected by the agent.

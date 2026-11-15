@@ -17,13 +17,9 @@ import Gallery from "./Gallery";
 import RSVPForm from "./RSVPForm";
 import FloatingNavigation from "./FloatingNavigation";
 import Footer from "./Footer";
-import MusicPlayer from "./MusicPlayer";
 
 export default function InvitationExperience({ data, guestName, personalizedGreeting, initialRSVP }: { data: WeddingData; guestName: string; personalizedGreeting?: string | null; initialRSVP?: RSVPReceipt | null }) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState(data.settings.musicVolume);
-  const [muted, setMuted] = useState(false);
   const music = resolveWeddingAudio(data.media.find((asset) => asset.type === "MUSIC")?.url || weddingConfig.music);
   const [opened, setOpened] = useState(false);
   const sections = useMemo(() => data.sections.filter((section) => section.enabled).sort((a, b) => a.sortOrder - b.sortOrder), [data.sections]);
@@ -34,10 +30,10 @@ export default function InvitationExperience({ data, guestName, personalizedGree
     const audio = audioRef.current;
     if (!audio || !data.settings.musicEnabled) return;
     audio.volume = data.settings.musicVolume;
-
   }, [data.settings.musicEnabled, data.settings.musicVolume, music]);
 
   function openInvitation() {
+    // Play in the click handler, before opening, to preserve mobile user activation.
     if (data.settings.musicEnabled) void audioRef.current?.play().catch(() => undefined);
     setOpened(true);
     setTimeout(() => document.getElementById("intro")?.scrollIntoView({ behavior: "smooth" }), 80);
@@ -56,9 +52,7 @@ export default function InvitationExperience({ data, guestName, personalizedGree
       }
     >
       {data.settings.musicEnabled && (
-        <>
-          <audio ref={audioRef} src={music} loop preload="metadata" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onVolumeChange={event => { setVolume(event.currentTarget.volume); setMuted(event.currentTarget.muted); }} />
-        </>
+        <audio ref={audioRef} src={music} loop preload="metadata" />
       )}
       <AnimatePresence>
         {!opened && <InvitationCover key="cover" data={data} hero={hero} greeting={greeting} onOpen={openInvitation} />}
@@ -66,7 +60,6 @@ export default function InvitationExperience({ data, guestName, personalizedGree
       {opened && <>
         <div className="invitation-dock">
           <FloatingNavigation />
-          {data.settings.musicEnabled && <MusicPlayer audioRef={audioRef} title={data.settings.musicTitle} playing={playing} volume={volume} muted={muted} />}
         </div>
         <div className="invitation-scroll" id="invitation-content">
         {sections.map((section) => {

@@ -5,6 +5,9 @@ export const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'
 export const audioTypes = ['audio/mpeg', 'audio/mp4', 'audio/x-m4a', 'audio/ogg'];
 export const IMAGE_LIMIT = 5 * 1024 * 1024;
 export const AUDIO_LIMIT = 15 * 1024 * 1024;
+// Only files created by this upload flow may be cleaned up. Bundled photos,
+// initial-media imports, and unrelated/shared Blob paths are never deleted.
+export const uploadPathSchema = z.string().regex(/^wedding\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/[a-zA-Z0-9._-]+$/, 'Invalid upload path.');
 export const uploadMetaSchema = mediaMetaSchema.extend({
   replaceId: z.string().min(1).optional(),
   filename: z.string().min(1).max(200),

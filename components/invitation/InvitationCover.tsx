@@ -1,7 +1,8 @@
 "use client";
 
 import Image, { getImageProps } from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
+import { useEffect } from "react";
 import type { WeddingData } from "@/lib/invitation";
 import CoupleNames from "./CoupleNames";
 import { weddingConfig } from "@/config/wedding.config";
@@ -18,6 +19,26 @@ export default function InvitationCover({
   onOpen: () => void;
 }) {
   const reducedMotion = useReducedMotion();
+  const heroAnimation = useAnimationControls();
+  const contentAnimation = useAnimationControls();
+
+  useEffect(() => {
+    if (reducedMotion) {
+      heroAnimation.set({ scale: 1 });
+      contentAnimation.set({ opacity: 1, y: 0 });
+    } else {
+      void heroAnimation.start({ scale: 1 });
+      void contentAnimation.start({ opacity: 1, y: 0 });
+    }
+    return () => {
+      heroAnimation.stop();
+      contentAnimation.stop();
+    };
+  }, [reducedMotion, heroAnimation, contentAnimation]);
+
+  // Initial styles are fixed for SSR and hydration. Browser preferences only
+  // affect animation commands after mount and exit timing after interaction.
+  // Reduced-motion CSS supplies the static view even before hydration finishes.
   const currentCollection = hero === weddingConfig.heroImage;
   const mobileHero = currentCollection ? weddingConfig.mobileHeroImage : hero;
   // Cover crops can render wider than the visible viewport on portrait tablets.
@@ -34,16 +55,16 @@ export default function InvitationCover({
       {/* Media-specific preloads prioritize only the crop this viewport needs. */}
       <link rel="preload" as="image" media="(max-width: 767px)" imageSrcSet={mobileSrcSet} imageSizes={mobileSizes} fetchPriority="high" />
       <link rel="preload" as="image" media="(min-width: 768px)" imageSrcSet={desktopSrcSet} imageSizes={desktopSizes} fetchPriority="high" />
-      <motion.div initial={reducedMotion ? false : { scale: 1.06 }} animate={{ scale: 1 }} transition={{ duration: 5, ease: "easeOut" }} className="absolute inset-0">
-        <picture>
+      <motion.div initial={{ scale: 1.06 }} animate={heroAnimation} transition={{ duration: 5, ease: "easeOut" }} className="hero-backdrop absolute inset-0">
+        <picture className="absolute inset-0">
           <source media="(min-width: 768px)" srcSet={desktopSrcSet} sizes={desktopSizes} />
           <Image {...heroImageProps} alt={heroImageProps.alt} src={mobileHero} sizes={mobileSizes} loading="eager" fetchPriority="high" className="hero-image object-cover" />
         </picture>
       </motion.div>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(22,34,24,0.38),rgba(22,34,24,0.32)_55%,rgba(22,34,24,0.04)_80%)] sm:bg-[linear-gradient(90deg,rgba(22,34,24,0.62),rgba(22,34,24,0.28)_48%,rgba(22,34,24,0.04))]" />
       <motion.div
-        initial={reducedMotion ? false : { opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={contentAnimation}
         transition={{ duration: 0.9 }}
         className="hero-content relative mx-auto flex min-h-full w-[min(100%-2.5rem,1120px)] flex-col items-center text-center sm:items-start sm:justify-center sm:text-left"
       >

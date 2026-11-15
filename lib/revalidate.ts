@@ -5,4 +5,5 @@ export function invalidateWeddingContent() {
   revalidateTag('wedding-content', { expire: 0 });
   revalidatePath('/');
   revalidatePath('/invite');
+  revalidatePath('/admin/media');
 }

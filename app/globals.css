@@ -120,11 +120,11 @@ textarea {
 .hero-image { object-position: center 85%; }
 
 .wedding-experience {
-  --dock-height: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  --dock-height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
   --sage-text: color-mix(in srgb, var(--sage) 75%, #24341d);
 }
 .wedding-experience :is(.text-sage, .eyebrow) { color: var(--sage-text); }
-.wedding-experience :is(.music-toggle, #rsvp form > button) { background-color: var(--sage-text); }
+.wedding-experience #rsvp form > button { background-color: var(--sage-text); }
 .wedding-experience[data-opened="true"] { height: 100dvh; overflow: hidden; }
 
 .invitation-scroll {
@@ -148,7 +148,6 @@ textarea {
   height: var(--dock-height);
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
   padding: 0.5rem max(0.5rem, env(safe-area-inset-right)) calc(0.5rem + env(safe-area-inset-bottom, 0px)) max(0.5rem, env(safe-area-inset-left));
   border-top: 1px solid rgba(117, 133, 111, 0.14);
   background: rgba(255, 250, 242, 0.97);
@@ -296,6 +295,12 @@ textarea {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  /* Keep the cover static and readable even before React hydrates. */
+  .invitation-cover .hero-backdrop,
+  .invitation-cover .hero-content {
+    transform: none !important;
+    opacity: 1 !important;
+  }
   .wedding-experience *,
   .wedding-experience *::before,
   .wedding-experience *::after {

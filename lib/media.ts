@@ -2,27 +2,37 @@ import { del, head } from '@vercel/blob';
 import { Prisma, type MediaAsset } from '@/generated/prisma/client';
 import { getPrismaClient } from './db';
 import { ApiError } from './api-errors';
-import { imageTypes, audioTypes, IMAGE_LIMIT, AUDIO_LIMIT } from './media-validation';
+import { imageTypes, audioTypes, IMAGE_LIMIT, AUDIO_LIMIT, uploadPathSchema } from './media-validation';
 import { invalidateWeddingContent } from './revalidate';
 
+export function isBlobStorageConfigured() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
+}
+
 export function requireBlobStorage() {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new ApiError('Media storage is not configured. Connect Vercel Blob to the project.', 503);
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  if (!token) throw new ApiError('Media upload is not configured for this deployment. Connect a public Vercel Blob store and set BLOB_READ_WRITE_TOKEN on the server.', 503);
+  return token;
 }
 
 export async function deleteBlobIfUnused(url: string) {
-  if (!url.startsWith('https://') || !new URL(url).hostname.endsWith('.public.blob.vercel-storage.com')) return;
-  if (await getPrismaClient().mediaAsset.count({ where: { url } })) return;
+  if (!URL.canParse(url)) return;
+  const parsed = new URL(url);
+  if (parsed.protocol !== 'https:' || !parsed.hostname.endsWith('.public.blob.vercel-storage.com') || !uploadPathSchema.safeParse(parsed.pathname.slice(1)).success) return;
   // A committed replacement remains usable even if CDN cleanup needs a retry.
-  try { await del(url); } catch { console.error('[media] Blob cleanup unavailable'); }
+  try {
+    if (await getPrismaClient().mediaAsset.count({ where: { url } })) return;
+    await del(url, { token: requireBlobStorage() });
+  } catch { console.error('[media] Blob cleanup unavailable'); }
 }
 
 export async function completeMediaUpload(id: string, url: string) {
-  requireBlobStorage();
+  const token = requireBlobStorage();
   const pending = await getPrismaClient().mediaUpload.findUnique({ where: { id } });
   if (!pending) throw new ApiError('Upload authorization expired. Please upload again.');
   if (pending.completedAt) return getPrismaClient().mediaAsset.findUnique({ where: { id } });
   // Query this store by authorized pathname, never fetch a client-supplied URL.
-  const blob = await head(pending.pathname);
+  const blob = await head(pending.pathname, { token });
   const music = pending.type === 'MUSIC';
   if (blob.url !== url || !(music ? audioTypes : imageTypes).includes(blob.contentType) || blob.size > (music ? AUDIO_LIMIT : IMAGE_LIMIT)) {
     throw new ApiError('The uploaded file is not valid.');
