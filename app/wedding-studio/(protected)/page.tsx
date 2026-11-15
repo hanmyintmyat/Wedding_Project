@@ -1,3 +1,4 @@
+import { studioLoginPath } from "@/lib/admin-routes";
 import DatabaseHealth from "@/components/admin/DatabaseHealth";
 import DashboardStats from "@/components/admin/DashboardStats";
 import PreviewPanel from "@/components/admin/PreviewPanel";
@@ -7,7 +8,7 @@ import { getPrismaClient } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 export default async function AdminDashboard() {
-  if (!(await getAdminSession())) redirect("/admin/login");
+  if (!(await getAdminSession())) redirect(studioLoginPath);
   const health = await getDatabaseHealth();
   const fallback = { TotalGuests: 0, Invited: 0, Accepted: 0, Pending: 0, Declined: 0, TotalRSVPGuests: 0 };
   const stats = health.connected ? await getPrismaClient().guest

@@ -59,7 +59,7 @@ export default function VenueActions({ location, directions, address, calendar }
         {status === "copied" ? "Address copied" : status === "manual" ? "Select the address below and copy it." : !value ? "The venue address is not available yet." : ""}
       </p>
       {status === "manual" && <input ref={manualAddress} readOnly value={value} aria-label="Venue address to copy" onFocus={event => event.currentTarget.select()} className="mt-2 min-h-11 w-full rounded-xl border border-sage/25 bg-white/80 px-3 py-2 text-sm text-ink" />}
-      {embedded && <p className="mt-3 text-xs leading-5 text-muted">Maps not opening? Tap ••• and choose Open in Browser.</p>}
+      {embedded && <p className="mt-3 text-xs leading-5 text-muted">Maps not opening? Tap the browser menu and choose Open in Browser.</p>}
     </div>
   );
 }

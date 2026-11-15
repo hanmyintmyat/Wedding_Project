@@ -1,3 +1,4 @@
+import { studioLoginPath } from "@/lib/admin-routes";
 import GuestTable from "@/components/admin/GuestTable";
 import { getAdminSession } from "@/lib/auth";
 import { getPrismaClient } from "@/lib/db";
@@ -5,7 +6,7 @@ import { getSiteUrl } from "@/lib/site-url";
 import { redirect } from "next/navigation";
 
 export default async function GuestsPage() {
-  if (!(await getAdminSession())) redirect("/admin/login");
+  if (!(await getAdminSession())) redirect(studioLoginPath);
   const guests = await getPrismaClient().guest.findMany({ include: { rsvp: true }, orderBy: { createdAt: "desc" } });
   const serializable = guests.map((guest) => ({
     ...guest,

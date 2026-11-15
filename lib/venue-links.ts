@@ -11,11 +11,15 @@ export function buildVenueMapsLinks(venue: Venue) {
     && Number.isFinite(latitude) && Number.isFinite(longitude)
     && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;
   const destination = coordinates ? `${latitude},${longitude}` : venue.venueAddress.trim() || venue.venueName.trim();
-  const query = encodeURIComponent(destination);
+  const query = coordinates ? destination : encodeURIComponent(destination);
   return {
     location: `https://www.google.com/maps/search/?api=1&query=${query}`,
     directions: `https://www.google.com/maps/dir/?api=1&destination=${query}`
   };
+}
+
+export function venueAddressLines(address: string) {
+  return address.replace(/,\s*(Singapore\b)/i, '\n$1');
 }
 
 export function isEmbeddedBrowser(userAgent: string) {

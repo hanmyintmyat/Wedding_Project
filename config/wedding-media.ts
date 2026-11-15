@@ -1,7 +1,7 @@
 import { resolveWeddingAudio } from "../lib/audio-source";
 
 // The current photo collection. Originals remain in the project folder.
-export const weddingPhotos = [
+const currentPhotos = [
   { id: "seed-hero", type: "HERO", url: "/images/current/hero-high-resolution.webp", alt: "Myo and Khaing together in the garden overlooking the historic house", sortOrder: 0 },
   { id: "seed-groom", type: "GROOM", url: "/images/current/groom-portrait.webp", alt: "Myo Thwin Kyaw", sortOrder: 0 },
   { id: "seed-bride", type: "BRIDE", url: "/images/current/PersonalPotrait1.webp", alt: "Khaing Su Wai", sortOrder: 0 },
@@ -15,6 +15,20 @@ export const weddingPhotos = [
   { id: "seed-gallery-7", type: "GALLERY", url: "/images/current/d531e78c-82c0-48b4-8958-1286ea711970.webp", alt: "A romantic evening together beneath the blue city sky", sortOrder: 7 },
   { id: "seed-gallery-8", type: "GALLERY", url: "/images/current/cac0a7db-e1c4-415d-9707-3f5f668d16e4.webp", alt: "A joyful embrace beneath the garden trees", sortOrder: 8 }
 ] satisfies Array<{ id: string; type: "HERO" | "GROOM" | "BRIDE" | "GALLERY"; url: string; alt: string; sortOrder: number }>;
+
+export const galleryPhotos = ['One', 'Two', 'Three', 'Four', 'Five'].map((name, sortOrder) => ({
+  id: `galaxy-${sortOrder + 1}`,
+  type: 'GALLERY' as const,
+  url: `/images/gallery/${name.toLowerCase()}.webp`,
+  alt: `${name} — Wedding memories`,
+  sortOrder
+}));
+
+export const weddingPhotos = [
+  ...currentPhotos.filter(photo => photo.type !== 'GALLERY'),
+  ...galleryPhotos,
+  ...currentPhotos.filter(photo => photo.type === 'GALLERY').map(photo => ({ ...photo, sortOrder: photo.sortOrder + galleryPhotos.length }))
+];
 
 type MediaReference = { id: string; type: string; url: string; alt: string | null };
 

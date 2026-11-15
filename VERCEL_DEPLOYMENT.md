@@ -64,7 +64,7 @@ The environment-file check should list only `.env.example`, which contains blank
    Use Node.js 22 locally for this release verification. Fix any failed configuration check before launching. Never reset the database or run migrate dev against production. Build/install do not apply migrations automatically.
 7. Click **Deploy** when the configuration is ready, or **Redeploy** if completing Blob configuration after an initial import. Wait for Ready and inspect the build logs. Run the post-deployment tests below on the production hostname. After the repository is connected, subsequent pushes to main normally trigger production deployments through Vercel's Git integration.
 8. Open Project → Settings → Domains → Add Domain. Enter the custom domain and configure the registrar DNS records exactly as Vercel displays them. Wait for domain verification and HTTPS. Set NEXT_PUBLIC_SITE_URL and NEXTAUTH_URL to this domain if they were initially set to the Vercel hostname, then redeploy and repeat tests on the custom domain.
-9. Leave the laptop off and verify the public page, RSVP and admin from another device. Normal CMS changes use `/admin` and do not need Git pushes or deployments.
+9. Leave the laptop off and verify the public page, RSVP and admin from another device. Normal CMS changes use `/wedding-studio` and do not need Git pushes or deployments.
 
 ## Exact post-deployment test URLs
 
@@ -75,17 +75,17 @@ Replace `YOURDOMAIN.com` with the verified custom domain or stable production `.
 | https://YOURDOMAIN.com/ | Invitation loads with existing design/photos |
 | https://YOURDOMAIN.com/invite?to=Phyo%20Thandar%20Aung | Personalized greeting; Open Invitation; music; mobile rendering; Accepted count 1/message Congratulations; then Declined update |
 | https://YOURDOMAIN.com/api/health | HTTP 200 and `{"app":"ok","database":"ok"}` |
-| https://YOURDOMAIN.com/admin | Logged out: redirect to login; logged in: cloud dashboard stats |
-| https://YOURDOMAIN.com/admin/login | Strong configured credentials work; secure session cookies |
-| https://YOURDOMAIN.com/admin/guests | Guest list, generated custom-domain invitation links and CSV links |
-| https://YOURDOMAIN.com/admin/rsvp | Same guest's single response appears and persists after refresh |
-| https://YOURDOMAIN.com/admin/media | Upload, preview, replace, delete, gallery reorder; URLs point to Blob |
-| https://YOURDOMAIN.com/admin/content | Saved content appears after public refresh |
-| https://YOURDOMAIN.com/admin/event | Saved event/venue updates Maps and Calendar links |
+| https://YOURDOMAIN.com/wedding-studio | Logged out: redirect to login; logged in: cloud dashboard stats |
+| https://YOURDOMAIN.com/wedding-studio/login | Strong configured credentials work; secure session cookies |
+| https://YOURDOMAIN.com/wedding-studio/guests | Guest list, generated custom-domain invitation links and CSV links |
+| https://YOURDOMAIN.com/wedding-studio/rsvp | Same guest's single response appears and persists after refresh |
+| https://YOURDOMAIN.com/wedding-studio/media | Upload, preview, replace, delete, gallery reorder; URLs point to Blob |
+| https://YOURDOMAIN.com/wedding-studio/content | Saved content appears after public refresh |
+| https://YOURDOMAIN.com/wedding-studio/event | Saved event/venue updates Maps and Calendar links |
 | https://YOURDOMAIN.com/api/admin/guests | Incognito/logged out: HTTP 401; no guest data |
 | https://YOURDOMAIN.com/api/admin/rsvp | Incognito/logged out: HTTP 401; no RSVP data |
 
-`/api/rsvp` is a POST endpoint: test through the public RSVP form rather than opening it as a browser page. Confirm repeat submission updates the same RSVP. Change dress-code colors in `/admin/design` and verify the public invitation after refresh. Test `/admin/settings` section visibility. Confirm the site has no development indicator.
+`/api/rsvp` is a POST endpoint: test through the public RSVP form rather than opening it as a browser page. Confirm repeat submission updates the same RSVP. Change dress-code colors in `/wedding-studio/design` and verify the public invitation after refresh. Test `/wedding-studio/settings` section visibility. Confirm the site has no development indicator.
 
 Admin page queries and browser create/update/delete API actions check server-side ADMIN authorization. Upload-token generation also checks the session and request origin. Blob completion callbacks carry SDK-verified signatures and an authorized database upload intent rather than a browser session.
 

@@ -51,7 +51,7 @@ function login() {
   if (csrf.status !== 200 || !token) throw new Error("Isolated-test authentication unavailable.");
   const response = request("POST", config.baseUrl + "/api/auth/callback/credentials", {
     csrfToken: token, email: __ENV.ADMIN_EMAIL, password: __ENV.ADMIN_PASSWORD,
-    callbackUrl: config.baseUrl + "/admin", json: "true"
+    callbackUrl: config.baseUrl + "/wedding-studio", json: "true"
   }, { headers: { Origin: config.baseUrl }, tags: { name: "POST auth credentials" } });
   if (response.status !== 200 || !json(response)?.url || /error=/.test(json(response).url)) {
     throw new Error("Isolated-test admin login failed. Credentials and response bodies are never printed.");

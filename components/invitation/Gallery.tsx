@@ -9,7 +9,7 @@ import { Reveal } from "./Reveal";
 
 export default function Gallery({ data }: { data: WeddingData }) {
   const reducedMotion = useReducedMotion();
-  const images = data.media.filter(asset => asset.type === "GALLERY");
+  const images = data.media.filter(asset => asset.type === "GALLERY").sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
   const [active, setActive] = useState<number | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const activeImage = active === null ? null : images[active];

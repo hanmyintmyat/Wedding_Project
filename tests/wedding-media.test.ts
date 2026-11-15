@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { existsSync } from "node:fs";
 import sharp from "sharp";
-import { resolveWeddingPhoto, weddingPhotos } from "../config/wedding-media";
+import { resolveWeddingPhoto, weddingPhotos, galleryPhotos } from "../config/wedding-media";
 
 test("the desktop hero retains camera-source resolution without stretching", async () => {
   const hero = weddingPhotos.find(photo => photo.type === "HERO")!;
@@ -14,9 +14,25 @@ test("the desktop hero retains camera-source resolution without stretching", asy
 test("the current photo collection is complete and contains no duplicate gallery files", () => {
   assert.equal(weddingPhotos.filter(photo => photo.type === "HERO").length, 1);
   const gallery = weddingPhotos.filter(photo => photo.type === "GALLERY");
-  assert.equal(gallery.length, 9);
+  assert.equal(gallery.length, 14);
   assert.equal(new Set(gallery.map(photo => photo.url)).size, gallery.length);
   for (const photo of weddingPhotos) assert.ok(existsSync(`public${photo.url}`), `Missing photo: ${photo.url}`);
+});
+
+test('One–Five images lead the fallback gallery in explicit numerical order without changing portrait roles', async () => {
+  assert.deepEqual(galleryPhotos.map(photo => photo.url), ['one', 'two', 'three', 'four', 'five'].map(name => `/images/gallery/${name}.webp`));
+  assert.deepEqual(galleryPhotos.map(photo => photo.sortOrder), [0, 1, 2, 3, 4]);
+  assert.deepEqual(weddingPhotos.filter(photo => photo.type === 'GALLERY').slice(0, 5), galleryPhotos);
+  for (const photo of galleryPhotos) {
+    const image = await sharp(`public${photo.url}`).metadata();
+    assert.equal(image.format, 'webp');
+    assert.ok(Math.max(image.width!, image.height!) <= 2048);
+  }
+  // A picture may appear in both the hero and gallery. Keep the configured
+  // portrait roles intact rather than excluding a gallery image by its source.
+  assert.equal(weddingPhotos.find(photo => photo.type === 'HERO')?.url, '/images/current/hero-high-resolution.webp');
+  assert.equal(weddingPhotos.find(photo => photo.type === 'GROOM')?.url, '/images/current/groom-portrait.webp');
+  assert.equal(weddingPhotos.find(photo => photo.type === 'BRIDE')?.url, '/images/current/PersonalPotrait1.webp');
 });
 
 test("legacy stored photos resolve to the current collection without changing IDs or order", () => {

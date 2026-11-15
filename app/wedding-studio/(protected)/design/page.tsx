@@ -1,3 +1,4 @@
+import { studioLoginPath } from "@/lib/admin-routes";
 import DressCodeManager from "@/components/admin/DressCodeManager";
 import ThemeSettings from "@/components/admin/ThemeSettings";
 import PreviewPanel from "@/components/admin/PreviewPanel";
@@ -7,7 +8,7 @@ import { themeSchema } from "@/lib/validations";
 import { redirect } from "next/navigation";
 
 export default async function DesignPage() {
-  if (!(await getAdminSession())) redirect("/admin/login");
+  if (!(await getAdminSession())) redirect(studioLoginPath);
   const data = await getWeddingDataLive();
   return (
     <div className="grid gap-6">

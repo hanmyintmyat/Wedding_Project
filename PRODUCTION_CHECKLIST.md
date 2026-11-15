@@ -10,7 +10,7 @@ Build readiness and cloud launch are separate. Tick launch items only after test
 - [x] Seed successful; rerun preserves edits and responses (temporary verification account removed; seed your own admin credentials before launch)
 - [ ] Initial photos and music moved to Blob (`npm run media:cloud`)
 - [ ] Admin login works with secure HTTPS cookies
-- [ ] Unauthorized `/admin` access redirects to login
+- [ ] Unauthorized `/wedding-studio` access redirects to login
 - [ ] Unauthorized `/api/admin/*` actions return 401/403
 - [ ] Main invitation works
 - [ ] Personalized guest URL works

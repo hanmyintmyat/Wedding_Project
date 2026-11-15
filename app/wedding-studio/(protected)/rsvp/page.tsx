@@ -1,10 +1,11 @@
+import { studioLoginPath } from "@/lib/admin-routes";
 import RSVPTable from "@/components/admin/RSVPTable";
 import { getAdminSession } from "@/lib/auth";
 import { getPrismaClient } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 export default async function RSVPAdminPage() {
-  if (!(await getAdminSession())) redirect("/admin/login");
+  if (!(await getAdminSession())) redirect(studioLoginPath);
   const rsvps = await getPrismaClient().rSVP.findMany({ include: { guest: true }, orderBy: { updatedAt: "desc" } });
   const serializable = rsvps.map((rsvp) => ({ ...rsvp, createdAt: rsvp.createdAt.toISOString(), updatedAt: rsvp.updatedAt.toISOString(), guest: { fullName: rsvp.guest.fullName } }));
   return (

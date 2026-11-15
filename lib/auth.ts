@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { getPrismaClient } from "./db";
 import { ApiError } from "./api-errors";
 import { getAdminCredentialsError } from "./admin-credentials";
+import { studioLoginPath } from "./admin-routes";
 
 const production = process.env.NODE_ENV === "production";
 const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
@@ -14,7 +15,7 @@ export const authOptions: NextAuthOptions = {
   secret,
   useSecureCookies: production,
   pages: {
-    signIn: "/admin/login"
+    signIn: studioLoginPath
   },
   providers: [
     CredentialsProvider({

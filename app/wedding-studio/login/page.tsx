@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock } from "lucide-react";
+import { studioDestination } from "@/lib/admin-routes";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,8 +26,7 @@ export default function LoginPage() {
         password: formData.get("password")
       });
       if (result?.ok) {
-        const callbackUrl = searchParams.get("callbackUrl");
-        const destination = callbackUrl && callbackUrl.startsWith("/admin") && !callbackUrl.startsWith("//") ? callbackUrl : "/admin";
+        const destination = studioDestination(searchParams.get("callbackUrl"));
         router.replace(destination);
         router.refresh();
       } else {

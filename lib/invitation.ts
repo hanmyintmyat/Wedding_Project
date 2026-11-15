@@ -73,7 +73,7 @@ export async function getWeddingDataLive() {
 
 // Keep the existing rendering model; the supported Data Cache persists on Vercel.
 // Do not catch inside this function: failed refreshes must not replace good cache entries.
-const getCachedWeddingData = unstable_cache(getWeddingDataLive, ['wedding-content-audio-maps-2026-11-15'], {
+const getCachedWeddingData = unstable_cache(getWeddingDataLive, ['wedding-content-venue-one-to-five-2026-11-15'], {
   tags: ['wedding-content'], revalidate: 300
 });
 
@@ -159,7 +159,7 @@ async function normalizeWeddingData(input: {
 
   return {
     mapsEmbedUrl: await mapPreviewUrl(settings),
-    settings,
+    settings: { ...settings, venueDirections: weddingConfig.venueDirections },
     content,
     colors: input.colors
       ? input.colors

@@ -132,7 +132,7 @@ test('admin media lifecycle keeps tokens private, validates uploads and preserve
       assert.equal(saved.status, 201);
       assert.equal((await saved.json()).url, blob.url);
       assert.equal((await (await mediaList()).json()).some((asset: Asset) => asset.id === upload.id), true);
-      for (const path of ['/', '/invite', '/admin/media']) assert.ok(events.includes(`invalidate:${path}`));
+      for (const path of ['/', '/invite', '/wedding-studio/media']) assert.ok(events.includes(`invalidate:${path}`));
     });
 
     for (const type of ['HERO', 'GROOM', 'BRIDE', 'GALLERY'] as const) {

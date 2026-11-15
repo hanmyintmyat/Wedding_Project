@@ -6,7 +6,7 @@ For final GitHub push commands, exact Vercel settings and post-deployment test U
 
 ## Runtime architecture
 
-Guest browser → custom HTTPS domain → Vercel Next.js pages/API/admin → Prisma → pooled Prisma Postgres.
+Guest browser → custom HTTPS domain → Vercel Next.js invitation, Wedding Studio and API routes → Prisma → pooled Prisma Postgres.
 Admin media upload → authenticated Vercel token endpoint → browser directly uploads to Blob → verified Blob callback / authenticated finalization → URL saved in Prisma Postgres.
 
 Public shared wedding content uses Next.js Data Cache, revalidated every five minutes and expired immediately after admin edits. Admin reads and RSVP writes use the database directly. Failed cache refreshes throw, retaining previous good cache entries; a cold cache falls back to the bundled invitation content. Guest personalization is separate from the shared cache. Cache retention is best effort, not a substitute for database availability. All normal changes appear after refreshing the public page, without rebuilding or redeploying.
@@ -61,8 +61,8 @@ For development, configure these same cloud URLs privately in `.env.local`. Rest
 11. Preserve your existing data before seeding. See **Moving existing data** below. Then run `npx prisma db seed` to fill initial defaults and the ten named dummy guests. The seed uses upserts with empty updates and does not overwrite saved content, photos, or RSVP responses. Remove dummy guests through Admin if they are not actual invitees. Seed requires a unique admin password of at least 12 characters. The temporary verification admin account has been removed; seed with your own configured credentials to create your database admin account.
 12. Move initial media into Blob with `npm run media:cloud`, then run `npm run lint` and `npm run build`. Deploy through Vercel only after these checks pass. The script uploads the existing photos/music and updates their database URLs; no new artwork or design is created. Bundled files in `public` also work from Vercel as a fallback, without depending on laptop files.
 13. Add the custom domain in Vercel → Project → Settings → Domains. Set the DNS records **exactly as Vercel shows** at your registrar. Confirm Vercel's verification and HTTPS certificate. If the URL changed, update both site/auth URL variables and redeploy once. Domain changes require configuration deployment; ordinary CMS changes do not.
-14. Test a personalized link, Open Invitation, music, accepted and declined RSVP, duplicate RSVP submission, venue links, calendar, and images on your phone. Verify responses in `/admin/rsvp`.
-15. Test `/admin` login, unauthorized access, content/date/venue/color edits, photo and music uploads/replacement/deletion, gallery ordering, and a refreshed public invitation. Confirm `/api/health` returns safe statuses. Complete `PRODUCTION_CHECKLIST.md` before sharing links.
+14. Test a personalized link, Open Invitation, music, accepted and declined RSVP, duplicate RSVP submission, venue links, calendar, and images on your phone. Verify responses in `/wedding-studio/rsvp`.
+15. Test `/wedding-studio` login, unauthorized access, content/date/venue/color edits, photo and music uploads/replacement/deletion, gallery ordering, and a refreshed public invitation. Confirm `/api/health` returns safe statuses. Complete `PRODUCTION_CHECKLIST.md` before sharing links.
 
 No automatic deployment or GitHub push is performed by the build scripts.
 
@@ -89,7 +89,7 @@ Import into an empty, migrated Prisma Postgres database before seeding. Import p
 
 ## Admin and media management
 
-Visit `https://YOURDOMAIN.com/admin` from any browser. Manage guests, RSVP responses, event dates/times, venue/maps, names, Myanmar/English text, footer, dress code, optional colors, theme, section visibility/order, hero/bride/groom photos, gallery and music.
+Visit `https://YOURDOMAIN.com/wedding-studio` from any browser. Manage guests, RSVP responses, event dates/times, venue/maps, names, Myanmar/English text, footer, dress code, optional colors, theme, section visibility/order, hero/bride/groom photos, gallery and music.
 
 Photos: JPG/JPEG, PNG, WebP, AVIF. The admin browser resizes uploads to a longest edge of 2400px and encodes WebP, targeting at most 1.5 MB when practical; the validated upload ceiling is 5 MB. Camera originals up to 25 MB can be prepared in the browser. Transparent photos retain transparency. Public images use responsive `next/image`, a prioritized hero, and lazy loading below the fold.
 

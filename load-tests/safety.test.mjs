@@ -129,7 +129,7 @@ async function harness(env = {}, initialGuests = [], mode = "ok") {
       let status = 200;
       let data = {};
       if (path === "/api/auth/csrf") data = { csrfToken: "fake-csrf" };
-      else if (path === "/api/auth/callback/credentials") data = { url: url.replace("/api/auth/callback/credentials", "/admin") };
+      else if (path === "/api/auth/callback/credentials") data = { url: url.replace("/api/auth/callback/credentials", "/wedding-studio") };
       else if (path === "/api/admin/guests" && method === "GET") data = structuredClone(guests);
       else if (path === "/api/admin/rsvp") data = structuredClone(responses);
       else if (path === "/api/admin/guests" && method === "POST") {

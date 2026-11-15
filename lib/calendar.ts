@@ -67,7 +67,7 @@ export function googleCalendarLink(data: WeddingData) {
     dates,
     ctz: "Asia/Yangon",
     location: `${data.settings.venueName}, ${data.settings.venueAddress}`,
-    details: data.content.englishIntro
+    details: `${data.content.englishIntro}\n\n${data.settings.venueDirections}`
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }

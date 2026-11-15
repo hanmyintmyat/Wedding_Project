@@ -1,6 +1,6 @@
 import type { WeddingData } from "@/lib/invitation";
 import { formatDisplayDate, googleCalendarLink } from "@/lib/calendar";
-import { buildVenueMapsLinks } from "@/lib/venue-links";
+import { buildVenueMapsLinks, venueAddressLines } from "@/lib/venue-links";
 import { Reveal } from "./Reveal";
 import VenueActions from "./VenueActions";
 
@@ -11,7 +11,8 @@ export default function VenueSection({ data }: { data: WeddingData }) {
       <Reveal className="section-shell text-center">
         <p className="eyebrow">{data.content.venueHeading}</p>
         <h2 className="mt-4 font-serif text-4xl">{data.settings.venueName}</h2>
-        <p className="mx-auto mt-4 max-w-2xl leading-7 text-muted">{data.settings.venueAddress}</p>
+        <p className="mx-auto mt-4 max-w-2xl whitespace-pre-line leading-8 text-muted">{venueAddressLines(data.settings.venueAddress)}</p>
+        <p className="mt-3 text-sm leading-7 text-sage">{data.settings.venueDirections}</p>
         <p className="mt-5 text-sm uppercase tracking-[0.2em] text-sage">
           {formatDisplayDate(data.settings.weddingDate)} • {data.settings.startTime} – {data.settings.endTime}
         </p>

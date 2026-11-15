@@ -1,3 +1,4 @@
+import { studioLoginPath } from "@/lib/admin-routes";
 import MediaManager from "@/components/admin/MediaManager";
 import { getAdminSession } from "@/lib/auth";
 import { getWeddingDataLive } from "@/lib/invitation";
@@ -5,7 +6,7 @@ import { redirect } from "next/navigation";
 import { isBlobStorageConfigured } from "@/lib/media";
 
 export default async function MediaPage() {
-  if (!(await getAdminSession())) redirect("/admin/login");
+  if (!(await getAdminSession())) redirect(studioLoginPath);
   const data = await getWeddingDataLive();
   return (
     <div className="grid gap-6">

@@ -1,10 +1,11 @@
+import { studioLoginPath } from "@/lib/admin-routes";
 import EventSettingsForm from "@/components/admin/EventSettingsForm";
 import { getAdminSession } from "@/lib/auth";
 import { getWeddingDataLive } from "@/lib/invitation";
 import { redirect } from "next/navigation";
 
 export default async function EventPage() {
-  if (!(await getAdminSession())) redirect("/admin/login");
+  if (!(await getAdminSession())) redirect(studioLoginPath);
   const data = await getWeddingDataLive();
   const settings = {
     ...data.settings,

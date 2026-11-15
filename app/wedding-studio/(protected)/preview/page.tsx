@@ -1,9 +1,10 @@
+import { studioLoginPath } from "@/lib/admin-routes";
 import PreviewPanel from "@/components/admin/PreviewPanel";
 import { getAdminSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export default async function PreviewPage() {
-  if (!(await getAdminSession())) redirect("/admin/login");
+  if (!(await getAdminSession())) redirect(studioLoginPath);
   return (
     <div className="grid gap-6">
       <div>

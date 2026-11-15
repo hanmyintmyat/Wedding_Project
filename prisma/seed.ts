@@ -174,11 +174,11 @@ async function main() {
     create: { id: "seed-music", type: MediaType.MUSIC, url: weddingConfig.music, alt: weddingConfig.musicTitle, sortOrder: 0 }
   });
   const galleryExists = await prisma.mediaAsset.count({ where: { type: MediaType.GALLERY } });
-  for (const [sortOrder, photo] of (galleryExists ? [] : galleryImages).entries()) {
+  for (const photo of (galleryExists ? [] : galleryImages)) {
     await prisma.mediaAsset.upsert({
-      where: { id: `seed-gallery-${sortOrder}` },
+      where: { id: photo.id },
       update: {},
-      create: { id: `seed-gallery-${sortOrder}`, type: MediaType.GALLERY, url: photo.url, alt: photo.alt, sortOrder }
+      create: { id: photo.id, type: MediaType.GALLERY, url: photo.url, alt: photo.alt, sortOrder: photo.sortOrder }
     });
   }
 
