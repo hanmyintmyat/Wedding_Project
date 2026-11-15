@@ -1,16 +1,11 @@
 "use client";
 
 import { CalendarPlus, Copy, MapPinned, Navigation } from "lucide-react";
-import { useRef, useState, useSyncExternalStore } from "react";
-import { isEmbeddedBrowser } from "@/lib/venue-links";
+import { useRef, useState } from "react";
 
-const subscribe = () => () => {};
-const browserSnapshot = () => isEmbeddedBrowser(navigator.userAgent);
-const serverSnapshot = () => false;
 const buttonClass = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-sage/25 bg-white/70 px-4 py-3 text-sm font-bold text-sage transition hover:bg-sage hover:text-white";
 
 export default function VenueActions({ location, directions, address, calendar }: { location: string; directions: string; address: string; calendar: string }) {
-  const embedded = useSyncExternalStore(subscribe, browserSnapshot, serverSnapshot);
   const [status, setStatus] = useState<"idle" | "copied" | "manual">("idle");
   const manualAddress = useRef<HTMLInputElement>(null);
   const value = address.trim();
@@ -50,8 +45,8 @@ export default function VenueActions({ location, directions, address, calendar }
   return (
     <div className="mx-auto mt-9 max-w-3xl">
       <div className="venue-actions grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <a className={buttonClass} href={location} target="_blank" rel="noopener noreferrer"><MapPinned aria-hidden="true" className="h-4 w-4 shrink-0" /> View Location</a>
-        <a className={buttonClass} href={directions} target="_blank" rel="noopener noreferrer"><Navigation aria-hidden="true" className="h-4 w-4 shrink-0" /> Get Directions</a>
+        {location && <a className={buttonClass} href={location} target="_blank" rel="noopener noreferrer"><MapPinned aria-hidden="true" className="h-4 w-4 shrink-0" /> View Location</a>}
+        {directions && <a className={buttonClass} href={directions} target="_blank" rel="noopener noreferrer"><Navigation aria-hidden="true" className="h-4 w-4 shrink-0" /> Get Directions</a>}
         <button type="button" className={buttonClass} onClick={copyAddress} disabled={!value}><Copy aria-hidden="true" className="h-4 w-4 shrink-0" /> Copy Address</button>
         <a className={buttonClass} href={calendar} target="_blank" rel="noopener noreferrer"><CalendarPlus aria-hidden="true" className="h-4 w-4 shrink-0" /> Add to Calendar</a>
       </div>
@@ -59,7 +54,6 @@ export default function VenueActions({ location, directions, address, calendar }
         {status === "copied" ? "Address copied" : status === "manual" ? "Select the address below and copy it." : !value ? "The venue address is not available yet." : ""}
       </p>
       {status === "manual" && <input ref={manualAddress} readOnly value={value} aria-label="Venue address to copy" onFocus={event => event.currentTarget.select()} className="mt-2 min-h-11 w-full rounded-xl border border-sage/25 bg-white/80 px-3 py-2 text-sm text-ink" />}
-      {embedded && <p className="mt-3 text-xs leading-5 text-muted">Maps not opening? Tap the browser menu and choose Open in Browser.</p>}
     </div>
   );
 }

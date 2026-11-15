@@ -32,8 +32,8 @@ test('venue defaults, display address and primary Maps links use the updated loc
   assert.equal(weddingConfig.venueDirections, 'Raffles Place MRT Exit I');
   assert.equal(venueAddressLines(weddingConfig.address), '2 Finlayson Green, Level 2\nSingapore 049247');
   const links = buildVenueMapsLinks({ ...venue, latitude: weddingConfig.latitude, longitude: weddingConfig.longitude });
-  assert.equal(links.location, 'https://www.google.com/maps/search/?api=1&query=1.2822,103.8513');
-  assert.equal(links.directions, 'https://www.google.com/maps/dir/?api=1&destination=1.2822,103.8513');
+  assert.equal(links.location, 'https://www.google.com/maps/search/?api=1&query=1.2822%2C103.8513');
+  assert.equal(links.directions, 'https://www.google.com/maps/dir/?api=1&destination=1.2822%2C103.8513');
 });
 
 test("venue name is the final fallback when the address is missing", () => {
@@ -47,10 +47,15 @@ test("incomplete or invalid coordinates do not override a usable address", () =>
   }
 });
 
-test("embedded-browser hints recognize common app markers", () => {
+test("embedded-browser detection recognizes common app markers", () => {
   for (const ua of ["FBAN/MessengerForiOS", "FBAV/400.0 FB_IAB", "Instagram 300.0", "Mozilla/5.0 Line/13.0", "WhatsApp/2.0", "TikTok 32"]) assert.equal(isEmbeddedBrowser(ua), true, ua);
 });
 
-test("ordinary Chrome and Safari do not display embedded-browser guidance", () => {
+test("embedded-browser detection does not misidentify ordinary Chrome and Safari", () => {
   for (const ua of ["Mozilla/5.0 Chrome/130.0 Safari/537.36", "Mozilla/5.0 iPhone Version/18.0 Mobile Safari/604.1", "Mozilla/5.0 Android Chrome/130.0 Mobile Safari/537.36"]) assert.equal(isEmbeddedBrowser(ua), false);
+});
+
+test('missing map configuration does not produce empty Maps links', () => {
+  assert.deepEqual(buildVenueMapsLinks({ latitude: null, longitude: null, venueName: '  ', venueAddress: '  ' }), { location: '', directions: '' });
+  assert.deepEqual(buildVenueMapsLinks({ latitude: NaN, longitude: Infinity, venueName: '', venueAddress: '' }), { location: '', directions: '' });
 });

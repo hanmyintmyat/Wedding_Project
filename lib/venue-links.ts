@@ -11,10 +11,10 @@ export function buildVenueMapsLinks(venue: Venue) {
     && Number.isFinite(latitude) && Number.isFinite(longitude)
     && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;
   const destination = coordinates ? `${latitude},${longitude}` : venue.venueAddress.trim() || venue.venueName.trim();
-  const query = coordinates ? destination : encodeURIComponent(destination);
+  const query = encodeURIComponent(destination);
   return {
-    location: `https://www.google.com/maps/search/?api=1&query=${query}`,
-    directions: `https://www.google.com/maps/dir/?api=1&destination=${query}`
+    location: destination ? `https://www.google.com/maps/search/?api=1&query=${query}` : '',
+    directions: destination ? `https://www.google.com/maps/dir/?api=1&destination=${query}` : ''
   };
 }
 

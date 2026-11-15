@@ -3,7 +3,6 @@ import { MediaType } from "@/generated/prisma/client";
 import { weddingConfig } from "@/config/wedding.config";
 import { resolveWeddingMedia, weddingPhotos } from "@/config/wedding-media";
 import { getPrismaClient } from "./db";
-import { mapPreviewUrl } from "./maps";
 import type { RSVPReceipt } from "./invitation-utils";
 export { greetingFor, slugifyName } from "./invitation-utils";
 
@@ -73,7 +72,7 @@ export async function getWeddingDataLive() {
 
 // Keep the existing rendering model; the supported Data Cache persists on Vercel.
 // Do not catch inside this function: failed refreshes must not replace good cache entries.
-const getCachedWeddingData = unstable_cache(getWeddingDataLive, ['wedding-content-venue-one-to-five-2026-11-15'], {
+const getCachedWeddingData = unstable_cache(getWeddingDataLive, ['wedding-content-venue-preview-one-to-five-2026-11-15'], {
   tags: ['wedding-content'], revalidate: 300
 });
 
@@ -158,7 +157,6 @@ async function normalizeWeddingData(input: {
   content.dressCodeWarning = "";
 
   return {
-    mapsEmbedUrl: await mapPreviewUrl(settings),
     settings: { ...settings, venueDirections: weddingConfig.venueDirections },
     content,
     colors: input.colors
