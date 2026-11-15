@@ -1,4 +1,4 @@
-import { apiError } from "@/lib/api-errors";
+import { apiError, ApiError } from "@/lib/api-errors";
 import { RSVPStatus } from "@/generated/prisma/client";
 import { requireAdmin } from "@/lib/auth";
 import { getPrismaClient } from "@/lib/db";
@@ -11,6 +11,11 @@ export async function PATCH(request: Request, { params }: Params) {
   await requireAdmin(request);
   const { id } = await params;
   const data = guestSchema.parse(await request.json());
+  const duplicate = await getPrismaClient().guest.findFirst({
+    where: { id: { not: id }, fullName: { equals: data.fullName, mode: "insensitive" } },
+    select: { id: true }
+  });
+  if (duplicate) throw new ApiError("A guest with this name already exists.", 409);
   const guest = await getPrismaClient().guest.update({
     where: { id },
     data: {

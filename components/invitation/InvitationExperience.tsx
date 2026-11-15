@@ -3,7 +3,7 @@
 import { AnimatePresence, MotionConfig } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { WeddingData } from "@/lib/invitation";
-import { greetingFor } from "@/lib/invitation-utils";
+import { greetingFor, type RSVPReceipt } from "@/lib/invitation-utils";
 import InvitationCover from "./InvitationCover";
 import InvitationIntro from "./InvitationIntro";
 import CoupleSection from "./CoupleSection";
@@ -17,7 +17,7 @@ import FloatingNavigation from "./FloatingNavigation";
 import Footer from "./Footer";
 import MusicPlayer from "./MusicPlayer";
 
-export default function InvitationExperience({ data, guestName, personalizedGreeting }: { data: WeddingData; guestName: string; personalizedGreeting?: string | null }) {
+export default function InvitationExperience({ data, guestName, personalizedGreeting, initialRSVP }: { data: WeddingData; guestName: string; personalizedGreeting?: string | null; initialRSVP?: RSVPReceipt | null }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const music = data.media.find((asset) => asset.type === "MUSIC")?.url || "/music/wildest-dreams.mp3";
@@ -78,7 +78,7 @@ export default function InvitationExperience({ data, guestName, personalizedGree
             case "gallery":
               return <Gallery key={section.sectionKey} data={data} />;
             case "rsvp":
-              return <RSVPForm key={section.sectionKey} guestName={guestName === "Beloved Guest" ? "" : guestName} />;
+              return <RSVPForm key={`${section.sectionKey}-${guestName}`} guestName={guestName === "Beloved Guest" ? "" : guestName} initialRSVP={initialRSVP} />;
             case "footer":
               return <Footer key={section.sectionKey} data={data} />;
             default:

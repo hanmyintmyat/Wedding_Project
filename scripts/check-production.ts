@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { validatePostgresUrl } from '../lib/postgres-config';
+import { getAdminCredentialsError } from '../lib/admin-credentials';
 dotenv.config({ path: '.env.production.local', quiet: true });
 dotenv.config({ path: '.env.local', quiet: true });
 dotenv.config({ quiet: true });
@@ -24,6 +25,7 @@ for (const key of ['NEXTAUTH_URL', 'NEXT_PUBLIC_SITE_URL']) {
 }
 if (process.env.NEXTAUTH_URL?.replace(/\/$/, '') !== process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')) failures.push('NEXTAUTH_URL and NEXT_PUBLIC_SITE_URL must match.');
 if ((process.env.AUTH_SECRET?.length || 0) < 32) failures.push('AUTH_SECRET must have at least 32 characters.');
-if ((process.env.ADMIN_PASSWORD?.length || 0) < 12 || process.env.ADMIN_PASSWORD === 'ChangeMe123!') failures.push('Choose an ADMIN_PASSWORD of at least 12 characters.');
+const adminCredentialsError = getAdminCredentialsError(process.env.ADMIN_EMAIL || '', process.env.ADMIN_PASSWORD || '', true);
+if (adminCredentialsError) failures.push(adminCredentialsError);
 if (failures.length) { console.error(failures.join('\n')); process.exitCode = 1; }
 else console.log('Production environment checks passed.');

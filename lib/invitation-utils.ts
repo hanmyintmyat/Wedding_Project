@@ -6,3 +6,7 @@ export function greetingFor(template: string, guestName?: string | null) {
 export function slugifyName(name: string) {
   return name.toLowerCase().trim().normalize("NFKC").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/(^-|-$)/g, "") || "guest";
 }
+export type RSVPReceipt = {
+  attendanceStatus: "ACCEPTED" | "DECLINED";
+  guestCount: number;
+};

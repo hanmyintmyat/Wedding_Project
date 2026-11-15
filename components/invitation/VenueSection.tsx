@@ -7,7 +7,7 @@ export default function VenueSection({ data }: { data: WeddingData }) {
   const maps = data.settings.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${data.settings.venueName} ${data.settings.venueAddress}`)}`;
   const destination = data.settings.latitude != null && data.settings.longitude != null
     ? `${data.settings.latitude},${data.settings.longitude}`
-    : `${data.settings.venueName} ${data.settings.venueAddress}`;
+    : new URL(data.mapsEmbedUrl).searchParams.get("q") || `${data.settings.venueName} ${data.settings.venueAddress}`;
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
   return (
     <section id="venue" className="bg-white/35">

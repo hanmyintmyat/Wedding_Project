@@ -20,7 +20,7 @@ export default function InvitationCover({
   return (
     <motion.section exit={{ opacity: 0 }} transition={{ duration: 0.65, ease: "easeInOut" }} className="fixed inset-0 z-50 flex min-h-[100dvh] items-center justify-start overflow-hidden bg-ink px-4 py-[clamp(1rem,3dvh,2.5rem)] text-white">
       <motion.div initial={{ scale: 1.06 }} animate={{ scale: 1 }} transition={{ duration: 5, ease: "easeOut" }} className="absolute inset-0">
-        <Image src={hero} alt="Wedding invitation cover photo" fill priority sizes="100vw" className="object-cover object-bottom" />
+        <Image src={hero} alt="Wedding invitation cover photo" fill preload sizes="100vw" className="object-cover object-bottom" />
       </motion.div>
       <div className="absolute inset-0 bg-black/35 sm:bg-[linear-gradient(90deg,rgba(30,43,28,0.85),rgba(30,43,28,0.40)_55%,rgba(30,43,28,0.08))]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent,rgba(0,0,0,0.34))]" />

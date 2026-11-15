@@ -2,7 +2,7 @@ import { Prisma } from '@/generated/prisma/client';
 import { ZodError } from 'zod';
 import { getPrismaClient } from '@/lib/db';
 import { rsvpSchema } from '@/lib/validations';
-import { slugifyName } from '@/lib/invitation-utils';
+import { guestSlug } from '@/lib/guest-identity';
 
 export const runtime = 'nodejs';
 
@@ -10,20 +10,20 @@ export async function POST(request: Request) {
   try {
     const data = rsvpSchema.parse(await request.json());
     const fullName = data.guestName.trim();
-    const inviteSlug = slugifyName(fullName);
+    const inviteSlug = guestSlug(fullName);
     const status = data.attendanceStatus;
     const guestCount = status === 'DECLINED' ? 0 : data.guestCount;
     // Retry a conflicting concurrent upsert once. Both writes commit together.
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         await getPrismaClient().$transaction(async tx => {
-          const existing = await tx.guest.findFirst({ where: { OR: [{ inviteSlug }, { fullName: { equals: fullName, mode: 'insensitive' } }] } });
+          const existing = await tx.guest.findFirst({ where: { fullName: { equals: fullName, mode: 'insensitive' } }, select: { id: true } });
           const guest = existing
             ? await tx.guest.update({ where: { id: existing.id }, data: { status } })
             : await tx.guest.upsert({ where: { inviteSlug }, update: { status }, create: { fullName, inviteSlug, status, personalizedGreeting: `Dear Beloved ${fullName}` } });
           await tx.rSVP.upsert({
             where: { guestId: guest.id },
-            update: { attendanceStatus: status, guestCount, message: data.message || null },
+            update: { attendanceStatus: status, guestCount, ...(data.message !== undefined ? { message: data.message || null } : {}) },
             create: { guestId: guest.id, attendanceStatus: status, guestCount, message: data.message || null }
           });
         });

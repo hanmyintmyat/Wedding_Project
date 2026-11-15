@@ -3,6 +3,7 @@ import { MediaType } from "@/generated/prisma/client";
 import { weddingConfig } from "@/config/wedding.config";
 import { getPrismaClient } from "./db";
 import { mapPreviewUrl } from "./maps";
+import type { RSVPReceipt } from "./invitation-utils";
 export { greetingFor, slugifyName } from "./invitation-utils";
 
 export type WeddingData = Awaited<ReturnType<typeof getWeddingData>>;
@@ -79,10 +80,20 @@ export async function getWeddingData() {
   catch { return normalizeWeddingData({}); }
 }
 
-export async function getGuestGreeting(name: string) {
+export async function getGuestInvitation(name: string) {
   try {
-    const guest = await getPrismaClient().guest.findFirst({ where: { fullName: { equals: name, mode: 'insensitive' } } });
-    return guest?.personalizedGreeting || null;
+    // One guest lookup per request; never serialize contact details or RSVP wishes.
+    const guest = await getPrismaClient().guest.findFirst({
+      where: { fullName: { equals: name, mode: 'insensitive' } },
+      select: {
+        personalizedGreeting: true,
+        rsvp: { select: { attendanceStatus: true, guestCount: true } }
+      }
+    });
+    const rsvp: RSVPReceipt | null = guest?.rsvp && guest.rsvp.attendanceStatus !== "PENDING"
+      ? { attendanceStatus: guest.rsvp.attendanceStatus, guestCount: guest.rsvp.attendanceStatus === "DECLINED" ? 0 : guest.rsvp.guestCount }
+      : null;
+    return { personalizedGreeting: guest?.personalizedGreeting || null, rsvp };
   } catch { return null; }
 }
 

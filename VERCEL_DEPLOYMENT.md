@@ -14,10 +14,12 @@ Set these in Vercel Production before the final production deployment. Add separ
 | NEXT_PUBLIC_SITE_URL | Your full production HTTPS origin, without a trailing slash |
 | NEXTAUTH_URL | Exactly the same HTTPS origin; NextAuth v4 uses it for canonical authentication URLs |
 | ADMIN_EMAIL | Your chosen admin login email |
-| ADMIN_PASSWORD | Unique password of at least 12 characters; replace the old default |
+| ADMIN_PASSWORD | Plain password, not a bcrypt hash; at least 12 characters; replace the old default |
 | BLOB_READ_WRITE_TOKEN | Read/write token for the public Vercel Blob store connected to this project |
 
 Use your intended custom domain for both URL variables, or the stable production Vercel hostname displayed for your project. No database URL or secret values are included in this guide.
+
+For admin login, enter the plain password in Vercel without wrapping quotes or accidental whitespace. Email is trimmed and compared without case sensitivity; password characters are compared exactly. Configure credentials under **Production**, then redeploy for changes to take effect. Existing database accounts continue to use their stored bcrypt hashes; changing the environment password does not update those records. Function logs labeled `[admin-auth]` report configuration problems without logging credential values.
 
 `NEXT_PUBLIC_SITE_URL` drives generated invitation links, CSV exports, metadata and admin previews. Vercel production refuses a missing, local or non-HTTPS configured site URL. API requests and admin navigation use same-origin relative routes. Google Maps/Calendar URLs remain their respective external service URLs.
 

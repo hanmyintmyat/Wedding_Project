@@ -5,21 +5,24 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send } from "lucide-react";
 import { rsvpSchema } from "@/lib/validations";
+import type { RSVPReceipt } from "@/lib/invitation-utils";
 import type { z } from "zod";
 import { Reveal } from "./Reveal";
 
 type FormInput = z.input<typeof rsvpSchema>;
 type FormData = z.output<typeof rsvpSchema>;
 
-export default function RSVPForm({ guestName }: { guestName: string }) {
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
+const receiptMessage = "Your RSVP has been received.\nWe are grateful to celebrate this special moment with you.";
+
+export default function RSVPForm({ guestName, initialRSVP }: { guestName: string; initialRSVP?: RSVPReceipt | null }) {
+  const [status, setStatus] = useState<"idle" | "success" | "error">(initialRSVP ? "success" : "idle");
+  const [message, setMessage] = useState(initialRSVP ? receiptMessage : "");
   const form = useForm<FormInput, undefined, FormData>({
     resolver: zodResolver(rsvpSchema),
     defaultValues: {
       guestName,
-      attendanceStatus: "ACCEPTED",
-      guestCount: 1,
+      attendanceStatus: initialRSVP?.attendanceStatus || "ACCEPTED",
+      guestCount: initialRSVP?.guestCount ?? 1,
       message: ""
     }
   });
@@ -31,11 +34,18 @@ export default function RSVPForm({ guestName }: { guestName: string }) {
       const response = await fetch("/api/rsvp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values)
+        // A saved wish stays private on the server. Preserve it unless edited here.
+        body: JSON.stringify({ ...values, message: form.formState.dirtyFields.message ? values.message : undefined })
       });
       if (!response.ok) throw new Error("Unable to save RSVP.");
+      const saved = { ...values, guestCount: values.attendanceStatus === "DECLINED" ? 0 : values.guestCount };
+      form.reset(saved);
+      // Public-home submissions can also recover their receipt after a refresh.
+      const url = new URL(window.location.href);
+      url.searchParams.set("to", values.guestName);
+      window.history.replaceState(null, "", url);
       setStatus("success");
-      setMessage("Your RSVP has been received.\nWe are grateful to celebrate this special moment with you.");
+      setMessage(receiptMessage);
     } catch {
       setStatus("error");
       setMessage("We couldn't save your RSVP right now. Please try again.");
@@ -50,7 +60,7 @@ export default function RSVPForm({ guestName }: { guestName: string }) {
           <h2 className="mt-4 font-serif text-4xl">Kindly Reply</h2>
           <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-muted">Kind reminder: each invitation is for a maximum of 2 guests, including yourself.</p>
         </div>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto mt-10 grid max-w-3xl gap-5 rounded-[1.5rem] border border-sage/18 bg-white/62 p-4 shadow-sm sm:p-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} onChange={() => { if (status === "success") { setStatus("idle"); setMessage(""); } }} className="mx-auto mt-10 grid max-w-3xl gap-5 rounded-[1.5rem] border border-sage/18 bg-white/62 p-4 shadow-sm sm:p-8">
           <label className="grid gap-2 text-sm font-bold text-sage">
             Guest Name
             <input className="min-h-11 rounded-xl border border-sage/20 bg-white px-4 py-3 font-normal text-ink" {...form.register("guestName")} />
@@ -77,7 +87,7 @@ export default function RSVPForm({ guestName }: { guestName: string }) {
             <Send className="h-4 w-4" /> {form.formState.isSubmitting ? "Sending..." : status === "success" ? "RSVP Received" : "Send RSVP"}
           </button>
           {message && (
-            <div className={`rounded-2xl border px-4 py-4 text-center text-sm leading-7 ${status === "success" ? "border-sage/20 bg-sage/10 text-sage" : "border-red-200 bg-red-50 text-red-700"}`}>
+            <div role={status === "error" ? "alert" : "status"} className={`rounded-2xl border px-4 py-4 text-center text-sm leading-7 ${status === "success" ? "border-sage/20 bg-sage/10 text-sage" : "border-red-200 bg-red-50 text-red-700"}`}>
               {status === "success" && <p className="font-serif text-2xl text-ink">Thank You</p>}
               <p className="whitespace-pre-line">{message}</p>
             </div>

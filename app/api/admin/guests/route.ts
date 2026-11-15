@@ -1,9 +1,9 @@
-import { apiError } from "@/lib/api-errors";
+import { apiError, ApiError } from "@/lib/api-errors";
 import { RSVPStatus } from "@/generated/prisma/client";
 import { requireAdmin } from "@/lib/auth";
 import { getPrismaClient } from "@/lib/db";
 import { guestSchema } from "@/lib/validations";
-import { slugifyName } from "@/lib/invitation-utils";
+import { guestSlug } from "@/lib/guest-identity";
 
 export async function GET(request: Request) {
   try {
@@ -30,11 +30,16 @@ export async function POST(request: Request) {
   try {
   await requireAdmin(request);
   const data = guestSchema.parse(await request.json());
+  const existing = await getPrismaClient().guest.findFirst({
+    where: { fullName: { equals: data.fullName, mode: "insensitive" } },
+    select: { id: true }
+  });
+  if (existing) throw new ApiError("A guest with this name already exists.", 409);
   const guest = await getPrismaClient().guest.create({
     data: {
       ...data,
       status: data.status as RSVPStatus,
-      inviteSlug: slugifyName(data.fullName),
+      inviteSlug: guestSlug(data.fullName),
       displayName: data.displayName || null,
       personalizedGreeting: data.personalizedGreeting || `Dear Beloved ${data.fullName}`,
       email: data.email || null,

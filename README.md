@@ -24,9 +24,11 @@ Copy `.env.example` only when configuring development. Never commit real `.env*`
 | `NEXT_PUBLIC_SITE_URL` | Same HTTPS domain; used in invitation links, CSV exports, and metadata |
 | `BLOB_READ_WRITE_TOKEN` | Token from the **public** Blob store connected to the project |
 | `ADMIN_EMAIL` | Your admin login email |
-| `ADMIN_PASSWORD` | Unique password, at least 12 characters; no default credentials |
+| `ADMIN_PASSWORD` | Plain password (not a bcrypt hash), at least 12 characters; no default credentials |
 
 The project currently uses NextAuth v4, so `NEXTAUTH_URL` is required. `AUTH_SECRET` is passed explicitly to NextAuth. Legacy `NEXTAUTH_SECRET` is accepted, but is unnecessary when `AUTH_SECRET` is supplied. Production uses secure cookies; HTTPS is required. Do not expose these secrets as `NEXT_PUBLIC_*` variables.
+
+Admin login reads `ADMIN_EMAIL` and `ADMIN_PASSWORD` on the server. Email comparison ignores case and surrounding whitespace. Password comparison is exact, including spaces. In Vercel's value field, enter the plain password itself without wrapping quotes or an accidental newline. Bcrypt is used only for existing database accounts (`User.passwordHash`); the seed hashes the plain password when creating an account and does not change an existing account's password. Production rejects the old default password. If login fails, check Function logs for `[admin-auth]` configuration guidance, which never contains credential values. Set the variables for the **Production** environment and redeploy after changing them; existing deployments keep their previous environment values.
 
 In the Prisma Console, select your existing database and open **Connect to your database**. Copy its **pooled TCP** connection into `DATABASE_URL` and its **direct TCP** connection into `DIRECT_URL` privately. They must refer to the same database and role. Do not use an Accelerate `prisma://` URL with the PostgreSQL adapter.
 
