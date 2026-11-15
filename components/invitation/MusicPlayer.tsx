@@ -27,13 +27,14 @@ export default function MusicPlayer({
   return (
     <button
       onClick={togglePlay}
-      className="fixed right-3 bottom-24 z-[60] grid h-11 w-11 cursor-pointer place-items-center rounded-full border border-white/70 bg-sage/90 text-white shadow-lg backdrop-blur focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage sm:right-4 lg:bottom-5"
+      className="music-toggle flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full border border-white/70 bg-sage px-3 text-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage lg:max-w-56 lg:px-4"
       type="button"
       title={`${label}: ${title}`}
       aria-label={label}
       aria-pressed={playing}
     >
       {playing ? <Pause aria-hidden className="h-4 w-4" /> : <Play aria-hidden className="h-4 w-4" />}
+      <span className="hidden max-w-40 truncate text-xs lg:block">{title}</span>
     </button>
   );
 }

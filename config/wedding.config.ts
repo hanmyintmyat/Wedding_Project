@@ -13,5 +13,6 @@ export const weddingConfig = {
   rsvpDeadline: "2027-01-10",
   musicTitle: "Wildest Dreams — Bridgerton Soundtrack",
   music: "/music/wildest-dreams.mp3",
-  heroImage: "/images/MainPhoto.jpeg"
+  heroImage: "/images/current/hero-high-resolution.webp",
+  mobileHeroImage: "/images/current/MainHeroPhoto.webp"
 };

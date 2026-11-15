@@ -5,6 +5,7 @@ import { put } from '@vercel/blob';
 import { PrismaClient } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { validatePostgresUrl } from '../lib/postgres-config';
+import { resolveWeddingPhoto } from '../config/wedding-media';
 dotenv.config({ path: '.env.local', quiet: true });
 dotenv.config({ quiet: true });
 const databaseUrl = process.env.DIRECT_URL;
@@ -17,7 +18,7 @@ async function main() {
 try {
   for (const asset of await prisma.mediaAsset.findMany()) {
     if (!asset.url.startsWith('/images/') && !asset.url.startsWith('/music/')) continue;
-    const filename = path.resolve(root, '.' + asset.url);
+    const filename = path.resolve(root, '.' + resolveWeddingPhoto(asset).url);
     if (!filename.startsWith(root + path.sep)) throw new Error('Invalid media path.');
     const body = await readFile(filename);
     const extension = path.extname(filename).toLowerCase();

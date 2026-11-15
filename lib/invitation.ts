@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { MediaType } from "@/generated/prisma/client";
 import { weddingConfig } from "@/config/wedding.config";
+import { resolveWeddingPhoto, weddingPhotos } from "@/config/wedding-media";
 import { getPrismaClient } from "./db";
 import { mapPreviewUrl } from "./maps";
 import type { RSVPReceipt } from "./invitation-utils";
@@ -26,7 +27,8 @@ const fallbackContent = {
   saveDateHeading: "Save The Date",
   dressCodeHeading: "Dress Code",
   dressCodeSubtitle: "Smart Casual / Elegant Attire",
-  dressCodeWarning: "Please avoid wearing white.",
+  // Kept empty for compatibility with the existing stored content schema.
+  dressCodeWarning: "",
   groomParents: "",
   brideParents: "",
   groomDescription: "With a grateful heart and joyful spirit.",
@@ -71,7 +73,7 @@ export async function getWeddingDataLive() {
 
 // Keep the existing rendering model; the supported Data Cache persists on Vercel.
 // Do not catch inside this function: failed refreshes must not replace good cache entries.
-const getCachedWeddingData = unstable_cache(getWeddingDataLive, ['wedding-content-v1'], {
+const getCachedWeddingData = unstable_cache(getWeddingDataLive, ['wedding-content-final-layout-2026-11-15'], {
   tags: ['wedding-content'], revalidate: 300
 });
 
@@ -144,35 +146,16 @@ async function normalizeWeddingData(input: {
       };
 
   const media = input.media
-    ? input.media.map((asset) => {
-        if (asset.type === MediaType.GROOM && asset.url === "/images/025eab17-7b4c-4bde-ac3f-caffddb382f7.jpeg") return { ...asset, url: "/images/groom-portrait.jpeg" };
-        if (asset.type === MediaType.BRIDE && asset.url === "/images/27ad605a-ef78-4998-8d57-2fb427d1f3f1.jpeg") return { ...asset, url: "/images/bride-portrait.jpeg" };
-        return asset;
-      })
+    ? input.media.map(resolveWeddingPhoto)
     : [
-        { id: "hero", type: MediaType.HERO, url: weddingConfig.heroImage, alt: "Wedding couple", sortOrder: 0 },
-        { id: "groom", type: MediaType.GROOM, url: "/images/groom-portrait.jpeg", alt: settings.groomName, sortOrder: 0 },
-        { id: "bride", type: MediaType.BRIDE, url: "/images/bride-portrait.jpeg", alt: settings.brideName, sortOrder: 0 },
-        { id: "music", type: MediaType.MUSIC, url: weddingConfig.music, alt: settings.musicTitle, sortOrder: 0 },
-        ...[
-          "025eab17-7b4c-4bde-ac3f-caffddb382f7.jpeg",
-          "27ad605a-ef78-4998-8d57-2fb427d1f3f1.jpeg",
-          "6ea1dea4-d46a-495b-b8f3-3bdfdff81612.jpeg",
-          "bf9b09d4-e414-4ada-a6dd-77a47aa2075a.jpeg",
-          "f1f8a894-c43f-48e1-9c0b-d714a074a587.jpeg",
-          "fb994e98-0ee4-4033-a35d-303d09bcbe21.jpeg"
-        ].map((file, sortOrder) => ({
-          id: `gallery-${sortOrder}`,
-          type: MediaType.GALLERY,
-          url: `/images/${file}`,
-          alt: "Wedding gallery photo",
-          sortOrder
-        }))
+        ...weddingPhotos,
+        { id: "music", type: MediaType.MUSIC, url: weddingConfig.music, alt: settings.musicTitle, sortOrder: 0 }
       ];
   const rawContent = input.content || {};
   const content = Object.fromEntries(
     Object.entries(fallbackContent).map(([key, value]) => [key, rawContent[key as keyof typeof fallbackContent] ?? value])
   ) as typeof fallbackContent;
+  content.dressCodeWarning = "";
 
   return {
     mapsEmbedUrl: await mapPreviewUrl(settings),
@@ -182,10 +165,10 @@ async function normalizeWeddingData(input: {
       ? input.colors
       : [
           { id: "dusty-blue", name: "Dusty Blue", hex: "#B8C9E8", sortOrder: 0 },
-          { id: "blush-pink", name: "Blush Pink", hex: "#EFC6D8", sortOrder: 1 },
-          { id: "sage-green", name: "Sage Green", hex: "#BFCDB2", sortOrder: 2 },
-          { id: "soft-yellow", name: "Soft Yellow", hex: "#F5E8A9", sortOrder: 3 },
-          { id: "mauve", name: "Mauve", hex: "#CDB3C8", sortOrder: 4 }
+          { id: "sage-green", name: "Sage Green", hex: "#BFCDB2", sortOrder: 1 },
+          { id: "soft-yellow", name: "Soft Yellow", hex: "#F5E8A9", sortOrder: 2 },
+          { id: "mocha", name: "Mocha", hex: "#BFA392", sortOrder: 3 },
+          { id: "champagne-beige", name: "Champagne Beige", hex: "#E6C694", sortOrder: 4 }
         ],
     media,
     sections: input.sections ? input.sections : fallbackSections,

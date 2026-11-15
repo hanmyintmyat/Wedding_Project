@@ -4,6 +4,7 @@ import { AnimatePresence, MotionConfig } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { WeddingData } from "@/lib/invitation";
 import { greetingFor, type RSVPReceipt } from "@/lib/invitation-utils";
+import { weddingConfig } from "@/config/wedding.config";
 import InvitationCover from "./InvitationCover";
 import InvitationIntro from "./InvitationIntro";
 import CoupleSection from "./CoupleSection";
@@ -23,7 +24,7 @@ export default function InvitationExperience({ data, guestName, personalizedGree
   const music = data.media.find((asset) => asset.type === "MUSIC")?.url || "/music/wildest-dreams.mp3";
   const [opened, setOpened] = useState(false);
   const sections = useMemo(() => data.sections.filter((section) => section.enabled).sort((a, b) => a.sortOrder - b.sortOrder), [data.sections]);
-  const hero = data.media.find((asset) => asset.type === "HERO")?.url || "/images/MainPhoto.jpeg";
+  const hero = data.media.find((asset) => asset.type === "HERO")?.url || weddingConfig.heroImage;
   const greeting = personalizedGreeting || greetingFor(data.content.greetingTemplate, guestName);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function InvitationExperience({ data, guestName, personalizedGree
   return (
     <MotionConfig reducedMotion="user">
     <main className="wedding-experience"
+      data-opened={opened}
       style={
         {
           "--sage": data.theme.primaryColor,
@@ -53,14 +55,17 @@ export default function InvitationExperience({ data, guestName, personalizedGree
       {data.settings.musicEnabled && (
         <>
           <audio ref={audioRef} src={music} loop preload="none" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
-          <MusicPlayer audioRef={audioRef} title={data.settings.musicTitle} playing={playing} />
         </>
       )}
       <AnimatePresence>
         {!opened && <InvitationCover key="cover" data={data} hero={hero} greeting={greeting} onOpen={openInvitation} />}
       </AnimatePresence>
-      {opened && <div>
-        <FloatingNavigation />
+      {opened && <>
+        <div className="invitation-dock">
+          <FloatingNavigation />
+          {data.settings.musicEnabled && <MusicPlayer audioRef={audioRef} title={data.settings.musicTitle} playing={playing} />}
+        </div>
+        <div className="invitation-scroll" id="invitation-content">
         {sections.map((section) => {
           switch (section.sectionKey) {
             case "intro":
@@ -85,7 +90,8 @@ export default function InvitationExperience({ data, guestName, personalizedGree
               return null;
           }
         })}
-      </div>}
+        </div>
+      </>}
     </main>
     </MotionConfig>
   );

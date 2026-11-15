@@ -4,6 +4,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { validatePostgresUrl } from "../lib/postgres-config";
 import bcrypt from "bcryptjs";
 import { weddingConfig } from "../config/wedding.config";
+import { weddingPhotos } from "../config/wedding-media";
 
 dotenv.config({ path: ".env.local", quiet: true });
 dotenv.config({ quiet: true });
@@ -39,17 +40,7 @@ const guests = [
   ["Yadanar Moe", RSVPStatus.PENDING, 1]
 ] as const;
 
-const galleryImages = [
-  "025eab17-7b4c-4bde-ac3f-caffddb382f7.jpeg",
-  "27ad605a-ef78-4998-8d57-2fb427d1f3f1.jpeg",
-  "29d04a16-b44c-4e83-b9fe-8e1ced3bc8f0.jpeg",
-  "6ea1dea4-d46a-495b-b8f3-3bdfdff81612.jpeg",
-  "bf9b09d4-e414-4ada-a6dd-77a47aa2075a.jpeg",
-  "c82dbefe-cea9-40a8-ab7a-d1ead24a725a.jpeg",
-  "f1f8a894-c43f-48e1-9c0b-d714a074a587.jpeg",
-  "fb994e98-0ee4-4033-a35d-303d09bcbe21.jpeg",
-  "fdef1fc0-a66d-4134-a2b8-802b47647597.jpeg"
-];
+const galleryImages = weddingPhotos.filter(photo => photo.type === "GALLERY");
 
 const sections = [
   "intro",
@@ -114,6 +105,7 @@ async function main() {
         myanmarIntro,
         footerMessage: "Your presence, love, and blessings mean the world to us.",
         thankYouText: "For being a part of our journey.",
+        dressCodeWarning: "",
         groomParents: "",
         brideParents: "",
         groomDescription: "With a grateful heart and joyful spirit.",
@@ -124,10 +116,10 @@ async function main() {
 
   const colors = [
     ["Dusty Blue", "#B8C9E8"],
-    ["Blush Pink", "#EFC6D8"],
     ["Sage Green", "#BFCDB2"],
     ["Soft Yellow", "#F5E8A9"],
-    ["Mauve", "#CDB3C8"]
+    ["Mocha", "#BFA392"],
+    ["Champagne Beige", "#E6C694"]
   ];
   for (const [sortOrder, [name, hex]] of colors.entries()) {
     await prisma.dressCodeColor.upsert({
@@ -164,17 +156,17 @@ async function main() {
   if (!(await prisma.mediaAsset.count({ where: { type: MediaType.HERO } }))) await prisma.mediaAsset.upsert({
     where: { id: "seed-hero" },
     update: {},
-    create: { id: "seed-hero", type: MediaType.HERO, url: "/images/MainPhoto.jpeg", alt: "Wedding couple", sortOrder: 0 }
+    create: { id: "seed-hero", type: MediaType.HERO, url: weddingConfig.heroImage, alt: "Wedding couple", sortOrder: 0 }
   });
   if (!(await prisma.mediaAsset.count({ where: { type: MediaType.GROOM } }))) await prisma.mediaAsset.upsert({
     where: { id: "seed-groom" },
     update: {},
-    create: { id: "seed-groom", type: MediaType.GROOM, url: "/images/groom-portrait.jpeg", alt: "Myo Thwin Kyaw", sortOrder: 0 }
+    create: { id: "seed-groom", type: MediaType.GROOM, url: weddingPhotos.find(photo => photo.type === "GROOM")!.url, alt: "Myo Thwin Kyaw", sortOrder: 0 }
   });
   if (!(await prisma.mediaAsset.count({ where: { type: MediaType.BRIDE } }))) await prisma.mediaAsset.upsert({
     where: { id: "seed-bride" },
     update: {},
-    create: { id: "seed-bride", type: MediaType.BRIDE, url: "/images/bride-portrait.jpeg", alt: "Khaing Su Wai", sortOrder: 0 }
+    create: { id: "seed-bride", type: MediaType.BRIDE, url: weddingPhotos.find(photo => photo.type === "BRIDE")!.url, alt: "Khaing Su Wai", sortOrder: 0 }
   });
   if (!(await prisma.mediaAsset.count({ where: { type: MediaType.MUSIC } }))) await prisma.mediaAsset.upsert({
     where: { id: "seed-music" },
@@ -182,11 +174,11 @@ async function main() {
     create: { id: "seed-music", type: MediaType.MUSIC, url: weddingConfig.music, alt: weddingConfig.musicTitle, sortOrder: 0 }
   });
   const galleryExists = await prisma.mediaAsset.count({ where: { type: MediaType.GALLERY } });
-  for (const [sortOrder, file] of (galleryExists ? [] : galleryImages).entries()) {
+  for (const [sortOrder, photo] of (galleryExists ? [] : galleryImages).entries()) {
     await prisma.mediaAsset.upsert({
       where: { id: `seed-gallery-${sortOrder}` },
       update: {},
-      create: { id: `seed-gallery-${sortOrder}`, type: MediaType.GALLERY, url: `/images/${file}`, alt: "Wedding gallery photo", sortOrder }
+      create: { id: `seed-gallery-${sortOrder}`, type: MediaType.GALLERY, url: photo.url, alt: photo.alt, sortOrder }
     });
   }
 

@@ -9,3 +9,7 @@ coverage/
 .local/
 *.log
 generated/prisma/
+# Keep uploaded camera originals locally; deploy only prepared public images.
+/*.jpeg
+/*.jpg
+/*.png

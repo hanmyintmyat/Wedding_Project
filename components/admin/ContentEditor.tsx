@@ -47,7 +47,6 @@ export default function ContentEditor({ content }: { content: ContentPayload }) 
           ))}
         </div>
         <label className="admin-label">Dress Code Subtitle<input className="admin-input" {...form.register("dressCodeSubtitle")} /></label>
-        <label className="admin-label">Dress Code Warning<input className="admin-input" {...form.register("dressCodeWarning")} /></label>
         <label className="admin-label">Thank-you Text<input className="admin-input" {...form.register("thankYouText")} /></label>
         <label className="admin-label">Footer Message<textarea className="admin-input" rows={3} {...form.register("footerMessage")} /></label>
         <p role="status" className="text-sm text-muted">{message}</p>

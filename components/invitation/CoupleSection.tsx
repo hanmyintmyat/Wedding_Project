@@ -1,10 +1,11 @@
 import Image from "next/image";
 import type { WeddingData } from "@/lib/invitation";
 import { Reveal } from "./Reveal";
+import { weddingPhotos } from "@/config/wedding-media";
 
 export default function CoupleSection({ data }: { data: WeddingData }) {
-  const groomPhoto = data.media.find((asset) => asset.type === "GROOM")?.url || "/images/groom-portrait.jpeg";
-  const bridePhoto = data.media.find((asset) => asset.type === "BRIDE")?.url || "/images/bride-portrait.jpeg";
+  const groomPhoto = data.media.find((asset) => asset.type === "GROOM")?.url || weddingPhotos.find(photo => photo.type === "GROOM")!.url;
+  const bridePhoto = data.media.find((asset) => asset.type === "BRIDE")?.url || weddingPhotos.find(photo => photo.type === "BRIDE")!.url;
   const people = [
     {
       name: data.settings.groomName,

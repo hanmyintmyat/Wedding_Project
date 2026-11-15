@@ -11,44 +11,23 @@ const items = [
   { href: "#rsvp", label: "RSVP", icon: Heart }
 ];
 
-const mobileItems = items.filter((item) => item.label !== "Couple");
-
 export default function FloatingNavigation() {
   function scrollToSection(href: string) {
-    document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.querySelector(href)?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" });
   }
 
   return (
-    <>
-      <nav className="fixed left-1/2 top-5 z-30 hidden -translate-x-1/2 rounded-full border border-sage/15 bg-white/75 px-4 py-2 shadow-sm backdrop-blur lg:block" aria-label="Wedding sections">
-        <div className="flex items-center gap-1">
-          {items.map((item) => (
-            <button
-              key={item.href}
-              type="button"
-              onClick={() => scrollToSection(item.href)}
-              className="rounded-full px-3 py-2 text-xs font-bold uppercase tracking-widest text-sage transition hover:bg-sage/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage"
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </nav>
-      <nav className="fixed bottom-3 left-1/2 z-40 w-[min(94vw,390px)] -translate-x-1/2 rounded-full border border-sage/15 bg-white/88 px-2 py-2 shadow-xl backdrop-blur lg:hidden" aria-label="Wedding sections">
-        <div className="grid grid-cols-5 gap-1">
-          {mobileItems.map((item) => (
-            <button
-              key={item.href}
-              type="button"
-              onClick={() => scrollToSection(item.href)}
-              className="grid min-h-11 justify-items-center gap-1 rounded-full px-1 py-1.5 text-[0.62rem] font-bold text-sage transition hover:bg-sage/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage"
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-    </>
+    <nav className="invitation-navigation min-w-0 flex-1 rounded-full border border-sage/15 bg-white/90 px-1.5 py-1 shadow-sm md:max-w-xl md:px-3" aria-label="Wedding sections">
+      <div className="grid grid-cols-5 gap-0.5 md:grid-cols-6 md:gap-1">
+        {items.map(item => (
+          <button key={item.href} type="button" onClick={() => scrollToSection(item.href)} aria-controls={item.href.slice(1)}
+            className={`${item.label === "Couple" ? "hidden md:grid" : "grid"} min-h-11 min-w-0 content-center justify-items-center gap-1 rounded-full px-0.5 py-1 text-[0.6rem] font-semibold text-sage hover:bg-sage/10 focus-visible:outline-2 md:px-2 md:text-xs`}>
+            <item.icon aria-hidden="true" className="h-4 w-4" />
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
   );
 }

@@ -1,11 +1,14 @@
 import type { WeddingData } from "@/lib/invitation";
-import { buildMonthCalendar } from "@/lib/calendar";
+import { buildMonthCalendar, weddingStartTimestamp } from "@/lib/calendar";
 import { Reveal } from "./Reveal";
+import BotanicalCorners from "./BotanicalCorners";
+import WeddingCountdown from "./WeddingCountdown";
 
 export default function SaveTheDateCalendar({ data }: { data: WeddingData }) {
   const calendar = buildMonthCalendar(data.settings.weddingDate);
   return (
-    <section id="save-date" className="bg-cream/55">
+    <section id="save-date" className="paper-section bg-cream/35">
+      <BotanicalCorners enabled={data.theme.floralEnabled} />
       <Reveal className="section-shell max-w-xl text-center">
         <p className="eyebrow">{data.content.saveDateHeading}</p>
         <h2 className="mt-4 font-serif text-4xl">{calendar.monthLabel}</h2>
@@ -19,7 +22,7 @@ export default function SaveTheDateCalendar({ data }: { data: WeddingData }) {
             {calendar.cells.map((day, index) => (
               <div key={`${day}-${index}`} className="grid aspect-square place-items-center text-sm text-muted">
                 {day && (
-                  <span className={day === calendar.highlightedDay ? "grid h-10 w-10 place-items-center rounded-full bg-blush/45 font-bold text-ink ring-1 ring-blush" : ""}>
+                  <span className={day === calendar.highlightedDay ? "grid h-8 w-8 place-items-center rounded-full bg-blush/45 font-bold text-ink ring-1 ring-blush sm:h-10 sm:w-10" : ""}>
                     {day}
                     {day === calendar.highlightedDay && <span className="sr-only"> wedding day</span>}
                   </span>
@@ -29,6 +32,7 @@ export default function SaveTheDateCalendar({ data }: { data: WeddingData }) {
           </div>
         </div>
         <p className="mt-8 font-serif text-xl text-ink">We can&apos;t wait to celebrate this special day with you.</p>
+        <WeddingCountdown target={weddingStartTimestamp(data.settings.weddingDate, data.settings.startTime)} />
       </Reveal>
     </section>
   );

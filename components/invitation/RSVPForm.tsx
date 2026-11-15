@@ -81,7 +81,7 @@ export default function RSVPForm({ guestName, initialRSVP }: { guestName: string
           </label>
           <label className="grid gap-2 text-sm font-bold text-sage">
             Optional Message / Wedding Wish
-            <textarea rows={4} className="rounded-xl border border-sage/20 bg-white px-4 py-3 font-normal text-ink" {...form.register("message")} />
+            <textarea rows={4} className="min-h-28 rounded-xl border border-sage/20 bg-white px-4 py-3 font-normal text-ink" {...form.register("message")} />
           </label>
           <button className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-sage px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white transition hover:bg-ink disabled:opacity-60 sm:w-auto" disabled={form.formState.isSubmitting || status === "success"}>
             <Send className="h-4 w-4" /> {form.formState.isSubmitting ? "Sending..." : status === "success" ? "RSVP Received" : "Send RSVP"}

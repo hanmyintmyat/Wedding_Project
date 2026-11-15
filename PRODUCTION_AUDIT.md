@@ -28,7 +28,7 @@ This report distinguishes deployed behavior from the corrected local production 
    | RSVP list | Protected from unauthenticated access | Local authenticated list shows all 7 records |
    | Venue / Maps | View Location resolves; Directions uses placeholder address | Directions fixed locally; venue content needs owner input |
    | Save the Date | January 2027 calendar highlights the 10th; calendar template uses 10:00–15:00 | Calendar location remains placeholder; confirm timezone |
-   | Dress colors | Six configured colors plus Avoid White render as 56 × 56 px circles | Passed |
+   | Dress colors | Configured color swatches render as 56 × 56 px circles | Passed |
    | Gallery | All 9 configured gallery images load; viewer, navigation and Escape work | Passed |
    | `/api/health` | HTTP 200: `{"app":"ok","database":"ok"}`; `no-store` | Passed |
    | Error handling | Invalid JSON/RSVP: sanitized 400; missing pages/files: 404 | Local database failure: sanitized 503 and retryable form error |

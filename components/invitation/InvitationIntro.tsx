@@ -1,9 +1,11 @@
 import type { WeddingData } from "@/lib/invitation";
 import { Reveal } from "./Reveal";
+import BotanicalCorners from "./BotanicalCorners";
 
 export default function InvitationIntro({ data }: { data: WeddingData }) {
   return (
-    <section id="intro" className="relative floral-corner">
+    <section id="intro" className="paper-section">
+      <BotanicalCorners enabled={data.theme.floralEnabled} />
       <Reveal className="section-shell text-center">
         <p className="eyebrow">With Joyful Hearts</p>
         <div className="mx-auto my-9 h-px w-28 bg-sage/35" />

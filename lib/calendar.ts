@@ -41,6 +41,15 @@ function parseTime(date: string, time: string) {
   return `${date.replaceAll("-", "")}T${String(hour).padStart(2, "0")}${String(minute).padStart(2, "0")}00`;
 }
 
+export function weddingStartTimestamp(dateValue: string, time: string) {
+  // Match the invitation's existing Asia/Yangon calendar timezone. Explicitly
+  // include the offset so the countdown is identical in every guest's timezone.
+  const date = dateValue.slice(0, 10);
+  const compact = parseTime(date, time);
+  const clock = compact.slice(9);
+  return Date.parse(`${date}T${clock.slice(0, 2)}:${clock.slice(2, 4)}:00+06:30`);
+}
+
 export function googleCalendarLink(data: WeddingData) {
   const title = `${data.settings.groomName} & ${data.settings.brideName} Wedding`;
   const date = data.settings.weddingDate.slice(0, 10);
