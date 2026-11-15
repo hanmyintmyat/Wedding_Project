@@ -5,11 +5,19 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { WeddingData } from "@/lib/invitation";
+import { weddingConfig } from "@/config/wedding.config";
 import { Reveal } from "./Reveal";
 
 export default function Gallery({ data }: { data: WeddingData }) {
   const reducedMotion = useReducedMotion();
-  const images = data.media.filter(asset => asset.type === "GALLERY").sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
+  const galleryImages = data.media.filter(asset => asset.type === "GALLERY").sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
+  const images = galleryImages.some(image => image.url === weddingConfig.mobileHeroImage)
+    ? galleryImages
+    : [...galleryImages, {
+        id: "main-hero-gallery",
+        url: weddingConfig.mobileHeroImage,
+        alt: "Myo Thwin Kyaw and Khaing Su Wai together"
+      }];
   const [active, setActive] = useState<number | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const activeImage = active === null ? null : images[active];
