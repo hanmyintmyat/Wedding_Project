@@ -1,3 +1,5 @@
+import { resolveWeddingAudio } from "../lib/audio-source";
+
 // The current photo collection. Originals remain in the project folder.
 export const weddingPhotos = [
   { id: "seed-hero", type: "HERO", url: "/images/current/hero-high-resolution.webp", alt: "Myo and Khaing together in the garden overlooking the historic house", sortOrder: 0 },
@@ -23,4 +25,10 @@ export function resolveWeddingPhoto<T extends MediaReference>(asset: T): T {
   const legacyLocation = (asset.url.startsWith("/images/") && !asset.url.startsWith("/images/current/"))
     || asset.url.includes("/wedding/initial/");
   return current && legacyLocation ? { ...asset, url: current.url, alt: current.alt } : asset;
+}
+
+export function resolveWeddingMedia<T extends MediaReference>(asset: T): T {
+  if (asset.type !== "MUSIC") return resolveWeddingPhoto(asset);
+  const url = resolveWeddingAudio(asset.url);
+  return url === asset.url ? asset : { ...asset, url };
 }

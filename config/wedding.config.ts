@@ -1,3 +1,5 @@
+import { weddingMusicPath } from "../lib/audio-source";
+
 export const weddingConfig = {
   groom: "Myo Thwin Kyaw",
   bride: "Khaing Su Wai",
@@ -12,7 +14,7 @@ export const weddingConfig = {
   longitude: null as number | null,
   rsvpDeadline: "2027-01-10",
   musicTitle: "Wildest Dreams — Bridgerton Soundtrack",
-  music: "/music/wildest-dreams.mp3",
+  music: weddingMusicPath,
   heroImage: "/images/current/hero-high-resolution.webp",
   mobileHeroImage: "/images/current/MainHeroPhoto.webp"
 };

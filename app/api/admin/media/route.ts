@@ -4,14 +4,14 @@ import { getPrismaClient } from '@/lib/db';
 import { apiError, ApiError } from '@/lib/api-errors';
 import { completeMediaUpload, deleteBlobIfUnused } from '@/lib/media';
 import { invalidateWeddingContent } from '@/lib/revalidate';
-import { resolveWeddingPhoto } from '@/config/wedding-media';
+import { resolveWeddingMedia } from '@/config/wedding-media';
 
 export const runtime = 'nodejs';
 export async function GET() {
   try {
     await requireAdmin();
     const assets = await getPrismaClient().mediaAsset.findMany({ orderBy: [{ type: 'asc' }, { sortOrder: 'asc' }] });
-    return Response.json(assets.map(resolveWeddingPhoto));
+    return Response.json(assets.map(resolveWeddingMedia));
   }
   catch (error) { return apiError(error); }
 }

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { WeddingData } from "@/lib/invitation";
 import { greetingFor, type RSVPReceipt } from "@/lib/invitation-utils";
 import { weddingConfig } from "@/config/wedding.config";
+import { resolveWeddingAudio } from "@/lib/audio-source";
 import InvitationCover from "./InvitationCover";
 import InvitationIntro from "./InvitationIntro";
 import CoupleSection from "./CoupleSection";
@@ -21,7 +22,9 @@ import MusicPlayer from "./MusicPlayer";
 export default function InvitationExperience({ data, guestName, personalizedGreeting, initialRSVP }: { data: WeddingData; guestName: string; personalizedGreeting?: string | null; initialRSVP?: RSVPReceipt | null }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
-  const music = data.media.find((asset) => asset.type === "MUSIC")?.url || "/music/wildest-dreams.mp3";
+  const [volume, setVolume] = useState(data.settings.musicVolume);
+  const [muted, setMuted] = useState(false);
+  const music = resolveWeddingAudio(data.media.find((asset) => asset.type === "MUSIC")?.url || weddingConfig.music);
   const [opened, setOpened] = useState(false);
   const sections = useMemo(() => data.sections.filter((section) => section.enabled).sort((a, b) => a.sortOrder - b.sortOrder), [data.sections]);
   const hero = data.media.find((asset) => asset.type === "HERO")?.url || weddingConfig.heroImage;
@@ -54,7 +57,7 @@ export default function InvitationExperience({ data, guestName, personalizedGree
     >
       {data.settings.musicEnabled && (
         <>
-          <audio ref={audioRef} src={music} loop preload="none" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
+          <audio ref={audioRef} src={music} loop preload="metadata" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onVolumeChange={event => { setVolume(event.currentTarget.volume); setMuted(event.currentTarget.muted); }} />
         </>
       )}
       <AnimatePresence>
@@ -63,7 +66,7 @@ export default function InvitationExperience({ data, guestName, personalizedGree
       {opened && <>
         <div className="invitation-dock">
           <FloatingNavigation />
-          {data.settings.musicEnabled && <MusicPlayer audioRef={audioRef} title={data.settings.musicTitle} playing={playing} />}
+          {data.settings.musicEnabled && <MusicPlayer audioRef={audioRef} title={data.settings.musicTitle} playing={playing} volume={volume} muted={muted} />}
         </div>
         <div className="invitation-scroll" id="invitation-content">
         {sections.map((section) => {

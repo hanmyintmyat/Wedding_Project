@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { MediaType } from "@/generated/prisma/client";
 import { weddingConfig } from "@/config/wedding.config";
-import { resolveWeddingPhoto, weddingPhotos } from "@/config/wedding-media";
+import { resolveWeddingMedia, weddingPhotos } from "@/config/wedding-media";
 import { getPrismaClient } from "./db";
 import { mapPreviewUrl } from "./maps";
 import type { RSVPReceipt } from "./invitation-utils";
@@ -73,7 +73,7 @@ export async function getWeddingDataLive() {
 
 // Keep the existing rendering model; the supported Data Cache persists on Vercel.
 // Do not catch inside this function: failed refreshes must not replace good cache entries.
-const getCachedWeddingData = unstable_cache(getWeddingDataLive, ['wedding-content-final-layout-2026-11-15'], {
+const getCachedWeddingData = unstable_cache(getWeddingDataLive, ['wedding-content-audio-maps-2026-11-15'], {
   tags: ['wedding-content'], revalidate: 300
 });
 
@@ -146,7 +146,7 @@ async function normalizeWeddingData(input: {
       };
 
   const media = input.media
-    ? input.media.map(resolveWeddingPhoto)
+    ? input.media.map(resolveWeddingMedia)
     : [
         ...weddingPhotos,
         { id: "music", type: MediaType.MUSIC, url: weddingConfig.music, alt: settings.musicTitle, sortOrder: 0 }
